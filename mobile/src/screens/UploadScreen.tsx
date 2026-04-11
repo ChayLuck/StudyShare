@@ -14,9 +14,9 @@ export default function UploadScreen({ navigation }: any) {
 
   const searchFuzzy = async (type: 'course' | 'school', query: string) => {
     if (query.length < 2) {
-        if (type === 'course') setCourseSuggestions([]);
-        else setSchoolSuggestions([]);
-        return;
+      if (type === 'course') setCourseSuggestions([]);
+      else setSchoolSuggestions([]);
+      return;
     }
     try {
       const res = await api.get(`/notes/search?type=${type}&query=${query}`);
@@ -30,7 +30,7 @@ export default function UploadScreen({ navigation }: any) {
   const pickFile = async () => {
     try {
       const result = await DocumentPicker.getDocumentAsync({
-        type: ['application/pdf', 'image/*'], // Exclude videos
+        type: ['application/pdf', 'image/*'], // Exxclude videos
       });
       if (!result.canceled && result.assets && result.assets.length > 0) {
         setFile(result.assets[0]);
@@ -49,7 +49,7 @@ export default function UploadScreen({ navigation }: any) {
     formData.append('courseName', courseName);
     formData.append('schoolName', schoolName);
     formData.append('description', description);
-    
+
     // Formatting the object properly for React Native FormData
     formData.append('file', {
       uri: file.uri,
@@ -75,15 +75,15 @@ export default function UploadScreen({ navigation }: any) {
         style={styles.input}
         value={schoolName}
         onChangeText={(text) => {
-           const val = text.toUpperCase();
-           setSchoolName(val);
-           searchFuzzy('school', val);
+          const val = text.toUpperCase();
+          setSchoolName(val);
+          searchFuzzy('school', val);
         }}
         autoCapitalize="characters"
       />
       {schoolSuggestions.map(s => (
         <TouchableOpacity key={s} onPress={() => { setSchoolName(s); setSchoolSuggestions([]); }}>
-           <Text style={styles.suggestion}>{s}</Text>
+          <Text style={styles.suggestion}>{s}</Text>
         </TouchableOpacity>
       ))}
 
@@ -92,15 +92,15 @@ export default function UploadScreen({ navigation }: any) {
         style={styles.input}
         value={courseName}
         onChangeText={(text) => {
-           const val = text.toUpperCase();
-           setCourseName(val);
-           searchFuzzy('course', val);
+          const val = text.toUpperCase();
+          setCourseName(val);
+          searchFuzzy('course', val);
         }}
         autoCapitalize="characters"
       />
       {courseSuggestions.map(s => (
         <TouchableOpacity key={s} onPress={() => { setCourseName(s); setCourseSuggestions([]); }}>
-           <Text style={styles.suggestion}>{s}</Text>
+          <Text style={styles.suggestion}>{s}</Text>
         </TouchableOpacity>
       ))}
 
@@ -112,7 +112,7 @@ export default function UploadScreen({ navigation }: any) {
       />
 
       <Button title={file ? `File: ${file.name}` : "Select PDF/Image"} onPress={pickFile} />
-      
+
       <View style={{ marginTop: 20 }}>
         <Button title="Upload" onPress={handleUpload} color="green" />
       </View>
