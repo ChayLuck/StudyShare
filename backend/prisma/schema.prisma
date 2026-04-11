@@ -1,0 +1,77 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+enum Role {
+  USER
+  ADMIN
+}
+
+model User {
+  id               String   @id @default(uuid())
+  email            String   @unique
+  password         String
+  role             Role     @default(USER)
+  isEmailVerified  Boolean  @default(false)
+  
+  // Relations
+  notes            Note[]
+  favoriteNotes    NoteFavorite[]
+  reports          Report[]
+  
+  createdAt        DateTime @default(now())
+  updatedAt        DateTime @updatedAt
+}
+
+model Note {
+  id           String   @id @default(uuid())
+  courseName   String
+  schoolName   String
+  description  String?
+  fileUrl      String
+  fileSize     Int
+  mimeType     String
+  
+  userId       String
+  user         User     @relation(fields: [userId], references: [id])
+  
+  isHidden     Boolean  @default(false)
+  needsReview  Boolean  @default(false)
+  isVerified   Boolean  @default(false)
+  
+  favorites    NoteFavorite[]
+  reports      Report[]
+  
+  createdAt    DateTime @default(now())
+  updatedAt    DateTime @updatedAt
+}
+
+model NoteFavorite {
+  id      String @id @default(uuid())
+  userId  String
+  noteId  String
+  
+  user    User   @relation(fields: [userId], references: [id])
+  note    Note   @relation(fields: [noteId], references: [id])
+  
+  @@unique([userId, noteId])
+}
+
+model Report {
+  id      String @id @default(uuid())
+  userId  String
+  noteId  String
+  reason  String
+  
+  user    User   @relation(fields: [userId], references: [id])
+  note    Note   @relation(fields: [noteId], references: [id])
+  
+  createdAt DateTime @default(now())
+  
+  @@unique([userId, noteId])
+}

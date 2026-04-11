@@ -1,0 +1,117 @@
+import { Request, Response } from 'express';
+import { prisma } from '../db/prisma';
+import { uploadToStorage } from '../services/storage.service';
+import { checkMagicNumbers } from '../utils/file.util';
+import { containsProfanity } from '../services/profanity.service';
+import { indexMetadata, searchMetadata } from '../services/search.service';
+import { AuthRequest } from '../middlewares/auth.middleware';
+
+export const uploadNote = async (req: AuthRequest, res: Response): Promise<void> => {
+  try {
+    const userId = req.user?.userId;
+    if (!userId) {
+      res.status(401).json({ error: 'Unauthorized' });
+      return;
+    }
+
+    const { courseName, schoolName, description } = req.body;
+    const file = req.file;
+
+    if (!file) {
+      res.status(400).json({ error: 'No file uploaded' });
+      return;
+    }
+
+    if (file.size > 10 * 1024 * 1024) { // 10MB limit
+      res.status(400).json({ error: 'File size exceeds 10MB limit' });
+      return;
+    }
+
+    if (!checkMagicNumbers(file.buffer)) {
+      res.status(400).json({ error: 'Invalid file type. Only PDF and certain Images are allowed.' });
+      return;
+    }
+
+    if (containsProfanity(courseName) || containsProfanity(schoolName) || (description && containsProfanity(description))) {
+      res.status(400).json({ error: 'Profanity detected in input fields.' });
+      return;
+    }
+
+    const upperCourseName = courseName.toUpperCase();
+    const upperSchoolName = schoolName.toUpperCase();
+
+    // Mock Upload
+    const fileUrl = await uploadToStorage(file.buffer, file.originalname, file.mimetype);
+
+    // Save to DB
+    const note = await prisma.note.create({
+      data: {
+        courseName: upperCourseName,
+        schoolName: upperSchoolName,
+        description,
+        fileUrl,
+        fileSize: file.size,
+        mimeType: file.mimetype,
+        userId
+      }
+    });
+
+    // Background index to ElasticSearch
+    indexMetadata('course', upperCourseName);
+    indexMetadata('school', upperSchoolName);
+
+    res.status(201).json({ message: 'Note uploaded successfully', note });
+  } catch (error) {
+    console.error('Upload Error:', error);
+    res.status(500).json({ error: 'Internal server error' });
+  }
+};
+
+export const getNotes = async (req: AuthRequest, res: Response): Promise<void> => {
+  try {
+    const page = parseInt(req.query.page as string) || 1;
+    const limit = parseInt(req.query.limit as string) || 10;
+    const skip = (page - 1) * limit;
+
+    // Only fetch notes that are NOT hidden
+    const notes = await prisma.note.findMany({
+      where: { isHidden: false },
+      skip,
+      take: limit,
+      orderBy: { createdAt: 'desc' },
+      include: {
+        user: { select: { email: true } },
+      }
+    });
+
+    const total = await prisma.note.count({ where: { isHidden: false } });
+
+    res.json({
+      data: notes,
+      pagination: {
+        page,
+        limit,
+        total,
+        totalPages: Math.ceil(total / limit)
+      }
+    });
+  } catch (error) {
+    res.status(500).json({ error: 'Internal server error' });
+  }
+};
+
+// Fuzzy search endpoints
+export const fuzzySearch = async (req: Request, res: Response): Promise<void> => {
+  try {
+    const { type, query } = req.query;
+    if (!type || !query || (type !== 'school' && type !== 'course')) {
+      res.status(400).json({ error: 'Invalid parameters' });
+      return;
+    }
+
+    const results = await searchMetadata(type as 'school' | 'course', query as string);
+    res.json({ results });
+  } catch (error) {
+    res.status(500).json({ error: 'Search error' });
+  }
+};
