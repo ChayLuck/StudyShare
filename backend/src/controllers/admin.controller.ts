@@ -20,7 +20,7 @@ export const getReportedNotes = async (req: AuthRequest, res: Response): Promise
 
 export const verifyNote = async (req: AuthRequest, res: Response): Promise<void> => {
   try {
-    const { id } = req.params;
+    const id = req.params.id as string;
     
     // Mark verified, unhide, and clear reports
     await prisma.$transaction([
@@ -41,7 +41,7 @@ export const verifyNote = async (req: AuthRequest, res: Response): Promise<void>
 
 export const deleteNote = async (req: AuthRequest, res: Response): Promise<void> => {
     try {
-        const { id } = req.params;
+        const id = req.params.id as string;
         await prisma.note.delete({ where: { id } });
         res.json({ message: 'Note deleted permanently' });
     } catch (error) {

@@ -13,7 +13,7 @@ const rateLimiter = new RateLimiterRedis({
 });
 
 export const rateLimitMiddleware = (req: Request, res: Response, next: NextFunction): void => {
-  rateLimiter.consume(req.ip)
+  rateLimiter.consume(req.ip as string)
     .then(() => {
       next();
     })

@@ -12,12 +12,10 @@ export const initElasticSearch = async () => {
         if (!indexExists) {
             await client.indices.create({
                 index: INDEX_NAME,
-                body: {
-                    mappings: {
-                        properties: {
-                            type: { type: 'keyword' }, // 'school' or 'course'
-                            name: { type: 'text' },
-                        }
+                mappings: {
+                    properties: {
+                        type: { type: 'keyword' }, // 'school' or 'course'
+                        name: { type: 'text' },
                     }
                 }
             });
@@ -36,14 +34,12 @@ export const indexMetadata = async (type: 'school' | 'course', name: string) => 
         // Check if exists
         const exists = await client.search({
             index: INDEX_NAME,
-            body: {
-                query: {
-                    bool: {
-                        must: [
-                            { match: { type } },
-                            { match_phrase: { name: upperName } }
-                        ]
-                    }
+            query: {
+                bool: {
+                    must: [
+                        { match: { type } },
+                        { match_phrase: { name: upperName } }
+                    ]
                 }
             }
         });
@@ -51,7 +47,7 @@ export const indexMetadata = async (type: 'school' | 'course', name: string) => 
         if (exists.hits.total && (exists.hits.total as any).value === 0) {
             await client.index({
                 index: INDEX_NAME,
-                body: {
+                document: {
                     type,
                     name: upperName
                 }
@@ -69,21 +65,19 @@ export const searchMetadata = async (type: 'school' | 'course', query: string) =
         const upperQuery = query.toUpperCase();
         const result = await client.search({
             index: INDEX_NAME,
-            body: {
-                query: {
-                    bool: {
-                        must: [
-                            { match: { type } },
-                            {
-                                match: {
-                                    name: {
-                                        query: upperQuery,
-                                        fuzziness: 'AUTO'
-                                    }
+            query: {
+                bool: {
+                    must: [
+                        { match: { type } },
+                        {
+                            match: {
+                                name: {
+                                    query: upperQuery,
+                                    fuzziness: 'AUTO'
                                 }
                             }
-                        ]
-                    }
+                        }
+                    ]
                 }
             }
         });

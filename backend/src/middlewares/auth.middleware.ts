@@ -12,6 +12,7 @@ export const optionalAuth = (req: AuthRequest, res: Response, next: NextFunction
   }
   
   const token = authHeader.split(' ')[1];
+  if (!token) return next();
   try {
     const payload = verifyToken(token) as { userId: string; role: string };
     req.user = payload;
@@ -30,6 +31,10 @@ export const requireAuth = (req: AuthRequest, res: Response, next: NextFunction)
   }
   
   const token = authHeader.split(' ')[1];
+  if (!token) {
+    res.status(401).json({ error: 'Invalid token format' });
+    return;
+  }
   try {
     const payload = verifyToken(token) as { userId: string; role: string };
     req.user = payload;
