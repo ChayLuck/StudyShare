@@ -6,8 +6,8 @@
     // "outDir": "./dist",
 
     // Environment Settings
-    "module": "CommonJS",
-    "moduleResolution": "Node",
+    "module": "Node16",
+    "moduleResolution": "Node16",
     "target": "es2022",
     "types": [],
     "esModuleInterop": true,
@@ -27,7 +27,6 @@
     "jsx": "react-jsx",
     "isolatedModules": true,
     "noUncheckedSideEffectImports": true,
-    "skipLibCheck": true,
-    "ignoreDeprecations": "6.0"
+    "skipLibCheck": true
   }
 }
