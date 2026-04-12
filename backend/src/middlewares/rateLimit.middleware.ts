@@ -4,11 +4,11 @@ import { Request, Response, NextFunction } from 'express';
 
 const redisClient = new Redis(process.env.REDIS_URL || 'redis://localhost:6379');
 
-// 10 requests per minute
+// 300 requests per minute
 const rateLimiter = new RateLimiterRedis({
   storeClient: redisClient,
   keyPrefix: 'middleware',
-  points: 10,
+  points: 300,
   duration: 60,
 });
 
