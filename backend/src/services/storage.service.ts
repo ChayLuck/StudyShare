@@ -1,4 +1,5 @@
 import { v2 as cloudinary } from 'cloudinary';
+import { Readable } from 'stream';
 
 // Configuration can also be handled natively if CLOUDINARY_URL is in .env 
 // But we use discrete keys provided by the user
@@ -22,8 +23,10 @@ export const uploadToStorage = async (fileBuffer: Buffer, fileName: string, mime
     };
 
     if (isPdf) {
-      // Force Cloudinary to keep the original file name and its extension (.pdf)
-      options.public_id = fileName;
+      // Force Cloudinary to keep an original-like file name and its extension (.pdf),
+      // while preventing file overwrites by prefixing Date.now() and sanitizing.
+      const safeName = fileName.replace(/[^a-zA-Z0-9.\-]/g, '_');
+      options.public_id = `${Date.now()}_${safeName}`;
     }
 
     const uploadStream = cloudinary.uploader.upload_stream(
@@ -38,7 +41,7 @@ export const uploadToStorage = async (fileBuffer: Buffer, fileName: string, mime
       }
     );
     
-    // Inject the buffer directly into the stream
-    uploadStream.end(fileBuffer);
+    // Inject the buffer using a readable stream pipe, as .end(buffer) sometimes yields 0kb files
+    Readable.from(fileBuffer).pipe(uploadStream);
   });
 };

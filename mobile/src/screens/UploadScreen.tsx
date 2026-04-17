@@ -61,7 +61,7 @@ export default function UploadScreen({ navigation }: any) {
 
     try {
       const token = await SecureStore.getItemAsync('accessToken');
-      const apiBase = api.defaults.baseURL || 'http://192.168.0.27:4000/api';
+      const apiBase = api.defaults.baseURL || 'http://localhost:4000/api';
       
       const response = await fetch(`${apiBase}/notes`, {
         method: 'POST',
