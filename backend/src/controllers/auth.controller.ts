@@ -36,7 +36,7 @@ export const register = async (req: Request, res: Response): Promise<void> => {
     res.status(201).json({ message: 'User registered. Please check email to verify.' });
   } catch (error: any) {
   console.error("🔴 REGISTER ERROR:", error);
-  res.status(500).json({ error: 'Internal server error', details: error.message || String(error) });
+  res.status(500).json({ error: 'Internal server error', details: error.stack || String(error) });
 }
 };
 
