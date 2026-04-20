@@ -1,6 +1,5 @@
 import axios from 'axios';
 import * as SecureStore from 'expo-secure-store';
-
 import Constants from 'expo-constants';
 import { Platform } from 'react-native';
 
@@ -12,7 +11,6 @@ const getAPIUrl = () => {
 
   // 2. Dynamically determine dev server IP (Works on LAN physical devices)
   const hostUri = Constants.experienceUrl || Constants.expoConfig?.hostUri;
-  console.log("🔍 hostUri:", hostUri); // ← EKLE
   if (hostUri) {
     const match = hostUri.match(/([0-9]+\.[0-9]+\.[0-9]+\.[0-9]+)/);
     if (match && match[1]) {
@@ -30,7 +28,6 @@ const getAPIUrl = () => {
 };
 
 const API_URL = getAPIUrl();
-console.log("🚀 API_URL:", API_URL); // ← EKLE
 
 const api = axios.create({
   baseURL: API_URL,

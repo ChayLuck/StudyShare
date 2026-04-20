@@ -11,6 +11,9 @@ const createTransporter = async () => {
       user: testAccount.user, // generated ethereal user
       pass: testAccount.pass, // generated ethereal password
     },
+    tls: {
+      rejectUnauthorized: false
+    }
   });
 };
 

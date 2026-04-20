@@ -96,7 +96,7 @@ export const getNotes = async (req: AuthRequest, res: Response): Promise<void> =
       }
     });
   } catch (error) {
-    res.status(500).json({ error: 'Internal server error' });
+    res.status(500).json({ error: 'Internal server error', details: (error as any).message, stack: (error as any).stack });
   }
 };
 
