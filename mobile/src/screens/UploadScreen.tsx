@@ -10,6 +10,7 @@ export default function UploadScreen({ navigation }: any) {
   const [description, setDescription] = useState('');
   const [file, setFile] = useState<any>(null);
   const [loading, setLoading] = useState(false);
+  const UNIVERSITIES = ['İTÜ', 'ODTÜ', 'BOĞAZİÇİ', 'HACETTEPE', 'YILDIZ TEKNİK', 'KOÇ UNIVERSITY', 'DOĞUŞ UNIVERSITY'];
 
   const [courseSuggestions, setCourseSuggestions] = useState<string[]>([]);
   const [schoolSuggestions, setSchoolSuggestions] = useState<string[]>([]);
@@ -112,6 +113,17 @@ export default function UploadScreen({ navigation }: any) {
             }}
             autoCapitalize="characters"
           />
+          <ScrollView horizontal showsHorizontalScrollIndicator={false} style={styles.chipContainer}>
+            {UNIVERSITIES.map(u => (
+              <TouchableOpacity 
+                key={u} 
+                style={[styles.chip, schoolName === u && styles.activeChip]} 
+                onPress={() => setSchoolName(u)}
+              >
+                <Text style={[styles.chipText, schoolName === u && styles.activeChipText]}>{u}</Text>
+              </TouchableOpacity>
+            ))}
+          </ScrollView>
           {schoolSuggestions.length > 0 && (
             <View style={styles.suggestionsContainer}>
               {schoolSuggestions.map(s => (
@@ -282,5 +294,30 @@ const styles = StyleSheet.create({
     elevation: 4
   },
   uploadButtonDisabled: { backgroundColor: '#818CF8' },
-  uploadButtonText: { color: '#fff', fontSize: 16, fontWeight: 'bold' }
+  uploadButtonText: { color: '#fff', fontSize: 16, fontWeight: 'bold' },
+  chipContainer: {
+    marginTop: 10,
+    flexDirection: 'row',
+  },
+  chip: {
+    backgroundColor: '#fff',
+    borderWidth: 1,
+    borderColor: '#e5e7eb',
+    paddingHorizontal: 12,
+    paddingVertical: 6,
+    borderRadius: 16,
+    marginRight: 8,
+  },
+  activeChip: {
+    backgroundColor: '#4F46E5',
+    borderColor: '#4F46E5',
+  },
+  chipText: {
+    fontSize: 12,
+    color: '#6b7280',
+    fontWeight: '600',
+  },
+  activeChipText: {
+    color: '#fff',
+  }
 });

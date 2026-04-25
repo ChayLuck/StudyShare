@@ -69,13 +69,31 @@ export const uploadNote = async (req: AuthRequest, res: Response): Promise<void>
 
 export const getNotes = async (req: AuthRequest, res: Response): Promise<void> => {
   try {
-    const page = parseInt(req.query.page as string) || 1;
-    const limit = parseInt(req.query.limit as string) || 10;
+    const { page: pageQuery, limit: limitQuery, school, search } = req.query;
+    console.log(`📡 GET /notes: page=${pageQuery}, limit=${limitQuery}, school=${school}, search=${search}`);
+    const page = parseInt(pageQuery as string) || 1;
+    const limit = parseInt(limitQuery as string) || 10;
     const skip = (page - 1) * limit;
 
-    // Only fetch notes that are NOT hidden
+    const where: any = { isHidden: false };
+    
+    // School filter from chips
+    if (school && school !== 'ALL') {
+      where.schoolName = school as string;
+    }
+
+    // Global search query
+    if (search) {
+      where.OR = [
+        { courseName: { contains: search as string, mode: 'insensitive' } },
+        { schoolName: { contains: search as string, mode: 'insensitive' } },
+        { description: { contains: search as string, mode: 'insensitive' } },
+      ];
+    }
+
+    // Only fetch notes that match criteria
     const notes = await prisma.note.findMany({
-      where: { isHidden: false },
+      where,
       skip,
       take: limit,
       orderBy: { createdAt: 'desc' },
@@ -84,7 +102,8 @@ export const getNotes = async (req: AuthRequest, res: Response): Promise<void> =
       }
     });
 
-    const total = await prisma.note.count({ where: { isHidden: false } });
+    const total = await prisma.note.count({ where });
+    console.log(`✅ Found ${notes.length} notes (Total matching: ${total})`);
 
     res.json({
       data: notes,

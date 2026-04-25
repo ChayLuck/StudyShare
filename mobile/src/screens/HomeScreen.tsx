@@ -1,7 +1,8 @@
 import React, { useEffect, useState } from 'react';
-import { View, Text, FlatList, TouchableOpacity, StyleSheet, Alert, Linking, SafeAreaView, ActivityIndicator } from 'react-native';
+import { View, Text, FlatList, TouchableOpacity, StyleSheet, Alert, Linking, SafeAreaView, ActivityIndicator, Image, TextInput } from 'react-native';
 import api from '../services/api';
 import * as SecureStore from 'expo-secure-store';
+import { useTheme } from '../context/ThemeContext';
 
 export default function HomeScreen({ navigation }: any) {
   const [notes, setNotes] = useState<any[]>([]);
@@ -9,13 +10,23 @@ export default function HomeScreen({ navigation }: any) {
   const [isLogged, setIsLogged] = useState(false);
   const [userRole, setUserRole] = useState<string | null>(null);
   const [loading, setLoading] = useState(false);
+  const [selectedSchool, setSelectedSchool] = useState('ALL');
+  const [searchQuery, setSearchQuery] = useState('');
+  const [favorites, setFavorites] = useState<string[]>([]);
+  const { colors, toggleTheme, isDark } = useTheme();
+
+  const UNIVERSITIES = ['ALL', 'İTÜ', 'ODTÜ', 'BOĞAZİÇİ', 'HACETTEPE', 'YILDIZ TEKNİK', 'KOÇ UNIVERSITY', 'DOĞUŞ UNIVERSITY'];
 
   // When mounting or focusing, re-check tokens and fetch recent items
   useEffect(() => {
-    const unsubscribe = navigation.addListener('focus', () => {
-      checkToken();
+    const unsubscribe = navigation.addListener('focus', async () => {
+      await checkToken();
       setPage(1);
-      fetchNotes(1, true);
+      fetchNotes(1, true, selectedSchool, searchQuery);
+      const token = await SecureStore.getItemAsync('accessToken');
+      if (token) {
+        fetchFavorites();
+      }
     });
     return unsubscribe;
   }, [navigation]);
@@ -27,18 +38,36 @@ export default function HomeScreen({ navigation }: any) {
     setUserRole(role);
   };
 
-  const fetchNotes = async (pageNum: number, reset = false) => {
+  const fetchFavorites = async () => {
+    try {
+      const res = await api.get('/favorites');
+      const favIds = res.data.data.map((n: any) => n.id);
+      setFavorites(favIds);
+    } catch (e) {
+      console.log('Error fetching favs', e);
+    }
+  };
+
+  const fetchNotes = async (pageNum: number, reset = false, school = 'ALL', search = '') => {
     if (loading) return;
     setLoading(true);
     try {
-      const response = await api.get(`/notes?page=${pageNum}&limit=10`);
+      const response = await api.get('/notes', {
+        params: {
+          page: pageNum,
+          limit: 10,
+          school: school,
+          search: search
+        }
+      });
       if (reset) {
         setNotes(response.data.data);
       } else {
         setNotes((prev) => [...prev, ...response.data.data]);
       }
-    } catch (e) {
+    } catch (e: any) {
       console.log('Error fetching notes', e);
+      Alert.alert('Error', e.message || 'Failed to fetch notes');
     } finally {
       setLoading(false);
     }
@@ -48,12 +77,56 @@ export default function HomeScreen({ navigation }: any) {
     if (!loading && notes.length >= page * 10) {
       const newPage = page + 1;
       setPage(newPage);
-      fetchNotes(newPage);
+      fetchNotes(newPage, false, selectedSchool, searchQuery);
     }
+  };
+
+  const handleSchoolSelect = (school: string) => {
+    setSelectedSchool(school);
+    setPage(1);
+    fetchNotes(1, true, school, searchQuery);
+  };
+
+  const handleSearch = (text: string) => {
+    setSearchQuery(text);
+    setPage(1);
+    fetchNotes(1, true, selectedSchool, text);
   };
 
   const viewFile = (fileUrl: string) => {
     Linking.openURL(fileUrl).catch(() => Alert.alert('Error', 'Unable to open file'));
+  };
+
+  const toggleFavorite = async (noteId: string) => {
+    if (!isLogged) return Alert.alert('Error', 'Must be logged in to favorite notes');
+    try {
+      const res = await api.post('/favorites/toggle', { noteId });
+      if (res.data.favorited) {
+        setFavorites([...favorites, noteId]);
+      } else {
+        setFavorites(favorites.filter(id => id !== noteId));
+      }
+    } catch (e) {
+      console.log('Toggle favorite error', e);
+    }
+  };
+
+  const getThumbnailUrl = (fileUrl: string) => {
+    if (!fileUrl) return undefined;
+
+    // Check if it is a Cloudinary URL
+    if (fileUrl.includes('res.cloudinary.com')) {
+      if (fileUrl.toLowerCase().includes('.pdf')) {
+        // Transformation: First page (pg_1), crop to size (w_500,h_300,c_fill), gravity north
+        // Also change extension to .jpg for the preview
+        return fileUrl
+          .replace('/upload/', '/upload/pg_1,w_600,h_400,c_fill,g_north/')
+          .replace(/\.pdf$/i, '.jpg');
+      }
+      // For images, just optimize size
+      return fileUrl.replace('/upload/', '/upload/w_600,h_400,c_fill/');
+    }
+    return fileUrl;
   };
 
   const reportNote = async (noteId: string) => {
@@ -74,40 +147,60 @@ export default function HomeScreen({ navigation }: any) {
   };
 
   const renderItem = ({ item }: { item: any }) => (
-    <View style={styles.card}>
+    <View style={[styles.card, { backgroundColor: colors.card }]}>
       <View style={styles.cardHeader}>
-         <View style={styles.chip}>
-            <Text style={styles.chipText}>{item.courseName}</Text>
-         </View>
-         <Text style={styles.schoolText} numberOfLines={1}>{item.schoolName}</Text>
+        <View style={[styles.chip, { backgroundColor: colors.chip }]}>
+          <Text style={[styles.chipText, { color: colors.chipText }]}>{item.courseName}</Text>
+        </View>
+        <Text style={[styles.schoolText, { color: colors.text }]} numberOfLines={1}>{item.schoolName}</Text>
       </View>
 
-      <Text style={styles.descriptionText} numberOfLines={3}>
-         {item.description || "No description provided."}
+      <Text style={[styles.descriptionText, { color: colors.textSecondary }]} numberOfLines={3}>
+        {item.description || "No description provided."}
       </Text>
 
-      <View style={styles.divider} />
+      <Image
+        source={{ uri: getThumbnailUrl(item.fileUrl) }}
+        style={styles.thumbnail}
+        resizeMode="cover"
+      />
+
+      <View style={[styles.divider, { backgroundColor: colors.divider }]} />
 
       <View style={styles.cardFooter}>
-        <TouchableOpacity style={styles.viewButton} onPress={() => viewFile(item.fileUrl)}>
-           <Text style={styles.viewButtonText}>View Material</Text>
+        <TouchableOpacity style={[styles.viewButton, { backgroundColor: colors.primary }]} onPress={() => viewFile(item.fileUrl)}>
+          <Text style={styles.viewButtonText}>View Material</Text>
         </TouchableOpacity>
-        
-        {isLogged && (
-          <TouchableOpacity style={styles.reportButton} onPress={() => reportNote(item.id)}>
-             <Text style={styles.reportButtonText}>⚠ Report</Text>
+
+        <View style={{ flexDirection: 'row', alignItems: 'center' }}>
+          <TouchableOpacity onPress={() => toggleFavorite(item.id)} style={{ marginRight: 15 }}>
+            <Text style={{ fontSize: 22 }}>{favorites.includes(item.id) ? '❤️' : '🤍'}</Text>
           </TouchableOpacity>
-        )}
+
+          {isLogged && (
+            <TouchableOpacity style={styles.reportButton} onPress={() => reportNote(item.id)}>
+              <Text style={styles.reportButtonText}>⚠</Text>
+            </TouchableOpacity>
+          )}
+        </View>
       </View>
     </View>
   );
 
   return (
-    <SafeAreaView style={styles.safeArea}>
+    <SafeAreaView style={[styles.safeArea, { backgroundColor: colors.background }]}>
       {/* Custom Header */}
-      <View style={styles.header}>
-        <Text style={styles.headerTitle}>StudyShare</Text>
+      <View style={[styles.header, { backgroundColor: colors.card, borderBottomColor: colors.border }]}>
+        <Text style={[styles.headerTitle, { color: colors.text }]}>StudyShare</Text>
         <View style={styles.headerLinks}>
+          <TouchableOpacity onPress={toggleTheme} style={{ marginRight: 15 }}>
+            <Text style={{ fontSize: 20 }}>{isDark ? '☀️' : '🌙'}</Text>
+          </TouchableOpacity>
+          {isLogged && (
+            <TouchableOpacity onPress={() => navigation.navigate('Favorites')} style={{ marginRight: 15 }}>
+              <Text style={{ fontSize: 20 }}>❤️</Text>
+            </TouchableOpacity>
+          )}
           {!isLogged ? (
             <TouchableOpacity onPress={() => navigation.navigate('Auth')}>
               <Text style={styles.headerActionText}>Login</Text>
@@ -115,7 +208,7 @@ export default function HomeScreen({ navigation }: any) {
           ) : (
             <>
               {userRole === 'ADMIN' && (
-                <TouchableOpacity onPress={() => navigation.navigate('Admin')} style={{marginRight: 15}}>
+                <TouchableOpacity onPress={() => navigation.navigate('Admin')} style={{ marginRight: 15 }}>
                   <Text style={[styles.headerActionText, { color: '#4F46E5', fontWeight: 'bold' }]}>Admin</Text>
                 </TouchableOpacity>
               )}
@@ -127,6 +220,53 @@ export default function HomeScreen({ navigation }: any) {
         </View>
       </View>
 
+      {/* Search Bar */}
+      <View style={[styles.searchContainer, { backgroundColor: colors.card, borderBottomColor: colors.border }]}>
+        <View style={[styles.searchWrapper, { backgroundColor: colors.background, borderColor: colors.border }]}>
+          <Text style={styles.searchIcon}>🔍</Text>
+          <TextInput
+            style={[styles.searchInput, { color: colors.text }]}
+            placeholder="Search school or course..."
+            placeholderTextColor={colors.textSecondary}
+            value={searchQuery}
+            onChangeText={handleSearch}
+          />
+          {searchQuery !== '' && (
+            <TouchableOpacity onPress={() => handleSearch('')}>
+              <Text style={{ marginRight: 10 }}>✕</Text>
+            </TouchableOpacity>
+          )}
+        </View>
+      </View>
+
+      {/* University Filter Bar */}
+      <View style={{ backgroundColor: colors.card }}>
+        <FlatList
+          horizontal
+          showsHorizontalScrollIndicator={false}
+          data={UNIVERSITIES}
+          keyExtractor={item => item}
+          contentContainerStyle={styles.filterContainer}
+          renderItem={({ item }) => (
+            <TouchableOpacity
+              style={[
+                styles.filterChip,
+                { backgroundColor: colors.chip, borderColor: colors.border },
+                selectedSchool === item && { backgroundColor: colors.primary, borderColor: colors.primary }
+              ]}
+              onPress={() => handleSchoolSelect(item)}
+            >
+              <Text style={[
+                styles.filterChipText,
+                { color: selectedSchool === item ? '#fff' : colors.textSecondary }
+              ]}>
+                {item}
+              </Text>
+            </TouchableOpacity>
+          )}
+        />
+      </View>
+
       <FlatList
         data={notes}
         keyExtractor={item => item.id}
@@ -134,7 +274,7 @@ export default function HomeScreen({ navigation }: any) {
         onEndReached={loadMore}
         onEndReachedThreshold={0.5}
         contentContainerStyle={styles.listContainer}
-        ListFooterComponent={loading ? <ActivityIndicator size="large" color="#4F46E5" style={{marginVertical: 20}} /> : null}
+        ListFooterComponent={loading ? <ActivityIndicator size="large" color="#4F46E5" style={{ marginVertical: 20 }} /> : null}
       />
 
       {/* Floating Action Button */}
@@ -148,9 +288,9 @@ export default function HomeScreen({ navigation }: any) {
 }
 
 const styles = StyleSheet.create({
-  safeArea: { 
-    flex: 1, 
-    backgroundColor: '#F9FAFB' 
+  safeArea: {
+    flex: 1,
+    backgroundColor: '#F9FAFB'
   },
   header: {
     flexDirection: 'row',
@@ -182,9 +322,48 @@ const styles = StyleSheet.create({
     fontWeight: '600',
     color: '#6b7280'
   },
+  searchContainer: {
+    paddingHorizontal: 15,
+    paddingVertical: 10,
+    borderBottomWidth: 1,
+  },
+  searchWrapper: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    borderWidth: 1,
+    borderRadius: 10,
+    paddingHorizontal: 10,
+    height: 45,
+  },
+  searchIcon: {
+    marginRight: 8,
+    fontSize: 16,
+  },
+  searchInput: {
+    flex: 1,
+    fontSize: 15,
+    height: '100%',
+  },
   listContainer: {
     padding: 15,
     paddingBottom: 100 // space for FAB
+  },
+  filterContainer: {
+    paddingHorizontal: 15,
+    paddingVertical: 12,
+    gap: 8
+  },
+  filterChip: {
+    paddingHorizontal: 14,
+    paddingVertical: 8,
+    borderRadius: 20,
+    backgroundColor: '#f3f4f6',
+    borderWidth: 1,
+    borderColor: '#e5e7eb'
+  },
+  filterChipText: {
+    fontSize: 13,
+    fontWeight: '600'
   },
   card: {
     backgroundColor: '#fff',
@@ -255,6 +434,13 @@ const styles = StyleSheet.create({
     color: '#ef4444',
     fontSize: 13,
     fontWeight: 'bold'
+  },
+  thumbnail: {
+    width: '100%',
+    height: 180,
+    borderRadius: 8,
+    backgroundColor: '#f3f4f6',
+    marginBottom: 12
   },
   fab: {
     position: 'absolute',
