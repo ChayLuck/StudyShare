@@ -34,9 +34,10 @@ export const register = async (req: Request, res: Response): Promise<void> => {
     await sendVerificationEmail(user.email, verificationToken);
 
     res.status(201).json({ message: 'User registered. Please check email to verify.' });
-  } catch (error) {
-    res.status(500).json({ error: 'Internal server error' });
-  }
+  } catch (error: any) {
+  console.error("🔴 REGISTER ERROR:", error);
+  res.status(500).json({ error: 'Internal server error', details: error.stack || String(error) });
+}
 };
 
 export const login = async (req: Request, res: Response): Promise<void> => {
@@ -64,9 +65,10 @@ export const login = async (req: Request, res: Response): Promise<void> => {
     const refreshToken = generateRefreshToken(user.id);
 
     res.json({ accessToken, refreshToken, user: { id: user.id, email: user.email, role: user.role } });
-  } catch (error) {
-    res.status(500).json({ error: 'Internal server error' });
-  }
+} catch (error: any) {
+  console.error("🔴 LOGIN ERROR:", error);
+  res.status(500).json({ error: 'Internal server error', details: error.message || String(error) });
+}
 };
 
 export const verifyEmail = async (req: Request, res: Response): Promise<void> => {
