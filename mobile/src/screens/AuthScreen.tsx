@@ -17,13 +17,15 @@ export default function AuthScreen({ navigation }: any) {
       if (isLogin) {
         const response = await api.post('/auth/login', { email, password });
         await SecureStore.setItemAsync('accessToken', response.data.accessToken);
-        if (response.data.user && response.data.user.role) {
-           await SecureStore.setItemAsync('userRole', response.data.user.role);
+        if (response.data.user) {
+           await SecureStore.setItemAsync('userRole', response.data.user.role || '');
+           await SecureStore.setItemAsync('userId', response.data.user.id);
         } else {
            await SecureStore.deleteItemAsync('userRole'); 
+           await SecureStore.deleteItemAsync('userId');
         }
         Alert.alert('Welcome Back', 'Logged in successfully!');
-        navigation.replace('Home');
+        navigation.replace('Tabs');
       } else {
         await api.post('/auth/register', { email, password });
         Alert.alert('Success', 'Registered! Check your email to verify.');

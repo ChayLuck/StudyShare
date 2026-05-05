@@ -9,6 +9,7 @@ export default function HomeScreen({ navigation }: any) {
   const [page, setPage] = useState(1);
   const [isLogged, setIsLogged] = useState(false);
   const [userRole, setUserRole] = useState<string | null>(null);
+  const [currentUserId, setCurrentUserId] = useState<string | null>(null);
   const [loading, setLoading] = useState(false);
   const [selectedSchool, setSelectedSchool] = useState('ALL');
   const [searchQuery, setSearchQuery] = useState('');
@@ -34,8 +35,10 @@ export default function HomeScreen({ navigation }: any) {
   const checkToken = async () => {
     const token = await SecureStore.getItemAsync('accessToken');
     const role = await SecureStore.getItemAsync('userRole');
+    const uId = await SecureStore.getItemAsync('userId');
     setIsLogged(!!token);
     setUserRole(role);
+    setCurrentUserId(uId);
   };
 
   const fetchFavorites = async () => {
@@ -139,11 +142,36 @@ export default function HomeScreen({ navigation }: any) {
     }
   };
 
+  const handleDeleteNote = async (noteId: string) => {
+    Alert.alert(
+      "Delete Note",
+      "Are you sure you want to permanently delete this note?",
+      [
+        { text: "Cancel", style: "cancel" },
+        { 
+          text: "Delete", 
+          style: "destructive", 
+          onPress: async () => {
+            try {
+              await api.delete(`/notes/${noteId}`);
+              setNotes(notes.filter(n => n.id !== noteId));
+              Alert.alert("Deleted", "Note has been removed successfully.");
+            } catch (e: any) {
+              Alert.alert("Error", e.response?.data?.error || "Failed to delete note");
+            }
+          }
+        }
+      ]
+    );
+  };
+
   const logout = async () => {
     await SecureStore.deleteItemAsync('accessToken');
     await SecureStore.deleteItemAsync('userRole');
+    await SecureStore.deleteItemAsync('userId');
     setIsLogged(false);
     setUserRole(null);
+    setCurrentUserId(null);
   };
 
   const renderItem = ({ item }: { item: any }) => (
@@ -178,9 +206,19 @@ export default function HomeScreen({ navigation }: any) {
           </TouchableOpacity>
 
           {isLogged && (
-            <TouchableOpacity style={styles.reportButton} onPress={() => reportNote(item.id)}>
-              <Text style={styles.reportButtonText}>⚠</Text>
-            </TouchableOpacity>
+            <View style={{ flexDirection: 'row', alignItems: 'center' }}>
+              {item.userId === currentUserId && (
+                <TouchableOpacity 
+                  style={[styles.reportButton, { marginRight: 10 }]} 
+                  onPress={() => handleDeleteNote(item.id)}
+                >
+                  <Text style={[styles.reportButtonText, { color: '#ef4444', fontSize: 18 }]}>🗑</Text>
+                </TouchableOpacity>
+              )}
+              <TouchableOpacity style={styles.reportButton} onPress={() => reportNote(item.id)}>
+                <Text style={styles.reportButtonText}>⚠</Text>
+              </TouchableOpacity>
+            </View>
           )}
         </View>
       </View>
@@ -196,11 +234,8 @@ export default function HomeScreen({ navigation }: any) {
           <TouchableOpacity onPress={toggleTheme} style={{ marginRight: 15 }}>
             <Text style={{ fontSize: 20 }}>{isDark ? '☀️' : '🌙'}</Text>
           </TouchableOpacity>
-          {isLogged && (
-            <TouchableOpacity onPress={() => navigation.navigate('Favorites')} style={{ marginRight: 15 }}>
-              <Text style={{ fontSize: 20 }}>❤️</Text>
-            </TouchableOpacity>
-          )}
+          {/* Profile icon removed from header as per user request */}
+
           {!isLogged ? (
             <TouchableOpacity onPress={() => navigation.navigate('Auth')}>
               <Text style={styles.headerActionText}>Login</Text>
@@ -432,7 +467,7 @@ const styles = StyleSheet.create({
   },
   reportButtonText: {
     color: '#ef4444',
-    fontSize: 13,
+    fontSize: 22,
     fontWeight: 'bold'
   },
   thumbnail: {

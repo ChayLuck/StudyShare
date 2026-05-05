@@ -56,3 +56,5 @@ app.listen(PORT, async () => {
     console.error('ElasticSearch init failed:', e);
   }
 });
+
+// Triggering restart for Prisma Client update

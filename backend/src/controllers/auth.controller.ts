@@ -9,11 +9,17 @@ import {
   verifyToken
 } from '../utils/jwt.util';
 import { sendVerificationEmail, sendPasswordResetEmail } from '../services/email.service';
+import { uploadToStorage } from '../services/storage.service';
 
 export const register = async (req: Request, res: Response): Promise<void> => {
   try {
-    const { email, password } = req.body;
+    const { email, password, name } = req.body;
     
+    if (!email || !password) {
+      res.status(400).json({ error: 'Email and password are required' });
+      return;
+    }
+
     // Check if user exists
     const existingUser = await prisma.user.findUnique({ where: { email } });
     if (existingUser) {
@@ -27,6 +33,7 @@ export const register = async (req: Request, res: Response): Promise<void> => {
       data: {
         email,
         password: hashedPassword,
+        name: name || null
       },
     });
 
@@ -64,7 +71,7 @@ export const login = async (req: Request, res: Response): Promise<void> => {
     const accessToken = generateAccessToken(user.id, user.role);
     const refreshToken = generateRefreshToken(user.id);
 
-    res.json({ accessToken, refreshToken, user: { id: user.id, email: user.email, role: user.role } });
+    res.json({ accessToken, refreshToken, user: { id: user.id, email: user.email, name: user.name, role: user.role } });
 } catch (error: any) {
   console.error("🔴 LOGIN ERROR:", error);
   res.status(500).json({ error: 'Internal server error', details: error.message || String(error) });
@@ -154,7 +161,12 @@ export const refreshToken = async (req: Request, res: Response): Promise<void> =
         return;
     }
     const payload: any = verifyToken(token);
-    const user = await prisma.user.findUnique({ where: { id: payload.userId } });
+    const userId = payload.userId || payload.id;
+    if (typeof userId !== 'string' || userId.trim() === '') {
+        res.status(401).json({ error: 'Invalid token payload' });
+        return;
+    }
+    const user = await prisma.user.findUnique({ where: { id: userId } });
 
     if (!user) {
         res.status(403).json({ error: 'User not found' });
@@ -165,5 +177,113 @@ export const refreshToken = async (req: Request, res: Response): Promise<void> =
     res.json({ accessToken: newAccessToken });
   } catch (error) {
     res.status(403).json({ error: 'Invalid token' });
+  }
+};
+
+export const getMe = async (req: any, res: Response): Promise<void> => {
+  try {
+    if (!req.user) {
+      res.status(401).json({ error: 'Unauthorized (No user payload)' });
+      return;
+    }
+    const userId = req.user.userId || req.user.id;
+    console.log('DEBUG: Resolved userId =', userId);
+    
+    const uuidRegex = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
+    if (typeof userId !== 'string' || !uuidRegex.test(userId)) {
+      console.log('DEBUG: userId is not a valid UUID string:', userId);
+      res.status(401).json({ error: 'Unauthorized (Invalid user ID format)' });
+      return;
+    }
+
+    const user = await prisma.user.findUnique({
+
+      where: { id: userId },
+      select: {
+        id: true,
+        email: true,
+        name: true,
+        avatarUrl: true,
+        role: true,
+        createdAt: true,
+        _count: {
+          select: {
+            notes: true,
+            favoriteNotes: true
+          }
+        }
+      }
+    });
+
+    console.log('DEBUG: User found in DB =', user ? 'YES' : 'NO');
+    if (!user) {
+      console.log('DEBUG: User not found in DB for ID:', userId);
+      res.status(404).json({ error: 'User not found' });
+      return;
+    }
+
+    res.json({ user });
+  } catch (error: any) {
+    console.error('GET_ME ERROR:', error);
+    res.status(500).json({ error: 'Internal server error', message: error.message, stack: error.stack });
+  }
+};
+
+export const updateProfile = async (req: any, res: Response): Promise<void> => {
+  try {
+    if (!req.user) {
+      res.status(401).json({ error: 'Unauthorized (No user payload)' });
+      return;
+    }
+    const userId = req.user.userId || req.user.id;
+    if (typeof userId !== 'string' || userId.trim() === '') {
+      res.status(401).json({ error: 'Unauthorized (Invalid user ID)' });
+      return;
+    }
+    const { name, currentPassword, newPassword } = req.body;
+    console.log('DEBUG: updateProfile body =', req.body);
+    const avatar = req.file;
+
+    const updateData: any = {};
+    if (name !== undefined && name !== null) updateData.name = name;
+
+    if (avatar) {
+      const avatarUrl = await uploadToStorage(avatar.buffer, avatar.originalname, avatar.mimetype);
+      updateData.avatarUrl = avatarUrl;
+    }
+
+    if (newPassword) {
+      if (!currentPassword) {
+        res.status(400).json({ error: 'Current password is required to set a new one' });
+        return;
+      }
+      const user = await prisma.user.findUnique({ where: { id: userId } });
+      if (!user) {
+        res.status(404).json({ error: 'User not found' });
+        return;
+      }
+      const isMatch = await bcrypt.compare(currentPassword, user.password);
+      if (!isMatch) {
+        res.status(400).json({ error: 'Current password is incorrect' });
+        return;
+      }
+      updateData.password = await bcrypt.hash(newPassword, 10);
+    }
+
+    if (Object.keys(updateData).length === 0) {
+      res.json({ message: 'No changes made', user: { id: userId } });
+      return;
+    }
+
+    const updatedUser = await prisma.user.update({
+      where: { id: userId },
+      data: updateData,
+      select: { id: true, email: true, name: true, avatarUrl: true }
+    });
+
+    res.json({ message: 'Profile updated successfully', user: updatedUser });
+  } catch (error) {
+    console.error('Update Profile Error:', error);
+    res.status(500).json({ error: 'Internal server error' });
   }
 };

@@ -42,7 +42,11 @@ export const verifyNote = async (req: AuthRequest, res: Response): Promise<void>
 export const deleteNote = async (req: AuthRequest, res: Response): Promise<void> => {
     try {
         const id = req.params.id as string;
-        await prisma.note.delete({ where: { id } });
+        await prisma.$transaction([
+            prisma.noteFavorite.deleteMany({ where: { noteId: id } }),
+            prisma.report.deleteMany({ where: { noteId: id } }),
+            prisma.note.delete({ where: { id } })
+        ]);
         res.json({ message: 'Note deleted permanently' });
     } catch (error) {
         res.status(500).json({ error: 'Internal server error' });

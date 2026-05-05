@@ -134,3 +134,46 @@ export const fuzzySearch = async (req: Request, res: Response): Promise<void> =>
     res.status(500).json({ error: 'Search error' });
   }
 };
+export const deleteNote = async (req: AuthRequest, res: Response): Promise<void> => {
+  try {
+    const userId = req.user?.userId;
+    const id = req.params.id as string;
+
+    if (!userId) {
+      res.status(401).json({ error: 'Unauthorized' });
+      return;
+    }
+
+    const note = await prisma.note.findUnique({
+      where: { id }
+    });
+
+    if (!note) {
+      res.status(404).json({ error: 'Note not found' });
+      return;
+    }
+
+    if (note.userId !== userId) {
+      res.status(403).json({ error: 'You do not have permission to delete this note' });
+      return;
+    }
+
+    // Delete associated favorites and reports first to avoid foreign key constraint errors
+    await prisma.$transaction([
+      prisma.noteFavorite.deleteMany({
+        where: { noteId: id }
+      }),
+      prisma.report.deleteMany({
+        where: { noteId: id }
+      }),
+      prisma.note.delete({
+        where: { id }
+      })
+    ]);
+
+    res.json({ message: 'Note deleted successfully' });
+  } catch (error: any) {
+    console.error('Delete Note Error:', error);
+    res.status(500).json({ error: 'Internal server error', details: error.message });
+  }
+};
