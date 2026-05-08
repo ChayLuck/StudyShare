@@ -203,8 +203,10 @@ export const getMe = async (req: any, res: Response): Promise<void> => {
         id: true,
         email: true,
         name: true,
+        university: true,
         avatarUrl: true,
         role: true,
+        points: true,
         createdAt: true,
         _count: {
           select: {
@@ -240,12 +242,13 @@ export const updateProfile = async (req: any, res: Response): Promise<void> => {
       res.status(401).json({ error: 'Unauthorized (Invalid user ID)' });
       return;
     }
-    const { name, currentPassword, newPassword } = req.body;
+    const { name, university, currentPassword, newPassword } = req.body;
     console.log('DEBUG: updateProfile body =', req.body);
     const avatar = req.file;
 
     const updateData: any = {};
     if (name !== undefined && name !== null) updateData.name = name;
+    if (university !== undefined && university !== null) updateData.university = university;
 
     if (avatar) {
       const avatarUrl = await uploadToStorage(avatar.buffer, avatar.originalname, avatar.mimetype);
@@ -278,12 +281,55 @@ export const updateProfile = async (req: any, res: Response): Promise<void> => {
     const updatedUser = await prisma.user.update({
       where: { id: userId },
       data: updateData,
-      select: { id: true, email: true, name: true, avatarUrl: true }
+      select: { id: true, email: true, name: true, university: true, avatarUrl: true }
     });
 
     res.json({ message: 'Profile updated successfully', user: updatedUser });
   } catch (error) {
     console.error('Update Profile Error:', error);
+    res.status(500).json({ error: 'Internal server error' });
+  }
+};
+
+export const deleteAccount = async (req: any, res: Response): Promise<void> => {
+  try {
+    if (!req.user) {
+      res.status(401).json({ error: 'Unauthorized' });
+      return;
+    }
+    const userId = req.user.userId || req.user.id;
+
+    // Delete related data first (depending on schema relations)
+    // Prisma relation 'onDelete: Cascade' in schema would handle this, 
+    // but if not, we do it manually.
+    
+    await prisma.user.delete({
+      where: { id: userId }
+    });
+
+    res.json({ message: 'Account deleted successfully' });
+  } catch (error) {
+    console.error('Delete Account Error:', error);
+    res.status(500).json({ error: 'Internal server error' });
+  }
+};
+
+export const getLeaderboard = async (req: any, res: Response): Promise<void> => {
+  try {
+    const topUsers = await prisma.user.findMany({
+      orderBy: { points: 'desc' },
+      take: 10,
+      select: {
+        id: true,
+        name: true,
+        university: true,
+        avatarUrl: true,
+        points: true,
+      }
+    });
+    res.json({ data: topUsers });
+  } catch (error) {
+    console.error('Leaderboard Error:', error);
     res.status(500).json({ error: 'Internal server error' });
   }
 };

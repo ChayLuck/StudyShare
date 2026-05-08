@@ -12,6 +12,8 @@ import FavoritesScreen from './src/screens/FavoritesScreen';
 import ProfileScreen from './src/screens/ProfileScreen';
 import QuestionsScreen from './src/screens/QuestionsScreen';
 import EditProfileScreen from './src/screens/EditProfileScreen';
+import LeaderboardScreen from './src/screens/LeaderboardScreen';
+import NoteDetailScreen from './src/screens/NoteDetailScreen';
 
 import { ThemeProvider, useTheme } from './src/context/ThemeContext';
 
@@ -59,18 +61,30 @@ function TabNavigator() {
   );
 }
 
+import { StatusBar } from 'expo-status-bar';
+
+function AppContent() {
+  const { isDark, colors } = useTheme();
+  return (
+    <NavigationContainer>
+      <StatusBar style={isDark ? 'light' : 'dark'} backgroundColor={colors.background} />
+      <Stack.Navigator initialRouteName="Tabs" screenOptions={{ headerShown: false }}>
+        <Stack.Screen name="Tabs" component={TabNavigator} />
+        <Stack.Screen name="Auth" component={AuthScreen} />
+        <Stack.Screen name="Upload" component={UploadScreen} />
+        <Stack.Screen name="Admin" component={AdminScreen} />
+        <Stack.Screen name="EditProfile" component={EditProfileScreen} />
+        <Stack.Screen name="Leaderboard" component={LeaderboardScreen} />
+        <Stack.Screen name="NoteDetail" component={NoteDetailScreen} />
+      </Stack.Navigator>
+    </NavigationContainer>
+  );
+}
+
 export default function App() {
   return (
     <ThemeProvider>
-      <NavigationContainer>
-        <Stack.Navigator initialRouteName="Tabs">
-          <Stack.Screen name="Tabs" component={TabNavigator} options={{ headerShown: false }} />
-          <Stack.Screen name="Auth" component={AuthScreen} options={{ title: 'Sign In / Register' }} />
-          <Stack.Screen name="Upload" component={UploadScreen} options={{ title: 'Upload Note' }} />
-          <Stack.Screen name="Admin" component={AdminScreen} options={{ title: 'Admin Review' }} />
-          <Stack.Screen name="EditProfile" component={EditProfileScreen} options={{ title: 'Edit Profile' }} />
-        </Stack.Navigator>
-      </NavigationContainer>
+      <AppContent />
     </ThemeProvider>
   );
 }

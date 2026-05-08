@@ -65,9 +65,13 @@ export default function FavoritesScreen({ navigation }: any) {
 
       <View style={[styles.divider, { backgroundColor: colors.divider }]} />
 
-      <View style={styles.cardFooter}>
+      <View style={[styles.cardFooter, { justifyContent: 'space-between' }]}>
         <TouchableOpacity style={[styles.viewButton, { backgroundColor: colors.primary }]} onPress={() => viewFile(item.fileUrl)}>
            <Text style={styles.viewButtonText}>View Material</Text>
+        </TouchableOpacity>
+
+        <TouchableOpacity onPress={() => navigation.navigate('NoteDetail', { note: item })} style={{ marginRight: 5 }}>
+          <Text style={{ fontSize: 22 }}>💬</Text>
         </TouchableOpacity>
       </View>
     </View>

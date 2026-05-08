@@ -11,14 +11,17 @@ model User {
   email           String         @unique
   password        String
   name            String?
+  university      String?
   avatarUrl       String?
   role            Role           @default(USER)
   isEmailVerified Boolean        @default(false)
+  points          Int            @default(0)
   createdAt       DateTime       @default(now())
   updatedAt       DateTime       @updatedAt
   notes           Note[]
   favoriteNotes   NoteFavorite[]
   reports         Report[]
+  comments        Comment[]
 }
 
 model Note {
@@ -38,6 +41,7 @@ model Note {
   user        User           @relation(fields: [userId], references: [id])
   favorites   NoteFavorite[]
   reports     Report[]
+  comments    Comment[]
 }
 
 model NoteFavorite {
@@ -60,6 +64,16 @@ model Report {
   user      User     @relation(fields: [userId], references: [id])
 
   @@unique([userId, noteId])
+}
+
+model Comment {
+  id        String   @id @default(uuid())
+  text      String
+  userId    String
+  noteId    String
+  createdAt DateTime @default(now())
+  user      User     @relation(fields: [userId], references: [id])
+  note      Note     @relation(fields: [noteId], references: [id])
 }
 
 enum Role {

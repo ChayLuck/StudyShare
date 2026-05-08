@@ -205,6 +205,10 @@ export default function HomeScreen({ navigation }: any) {
             <Text style={{ fontSize: 22 }}>{favorites.includes(item.id) ? '❤️' : '🤍'}</Text>
           </TouchableOpacity>
 
+          <TouchableOpacity onPress={() => navigation.navigate('NoteDetail', { note: item })} style={{ marginRight: 15 }}>
+            <Text style={{ fontSize: 22 }}>💬</Text>
+          </TouchableOpacity>
+
           {isLogged && (
             <View style={{ flexDirection: 'row', alignItems: 'center' }}>
               {item.userId === currentUserId && (
@@ -233,6 +237,9 @@ export default function HomeScreen({ navigation }: any) {
         <View style={styles.headerLinks}>
           <TouchableOpacity onPress={toggleTheme} style={{ marginRight: 15 }}>
             <Text style={{ fontSize: 20 }}>{isDark ? '☀️' : '🌙'}</Text>
+          </TouchableOpacity>
+          <TouchableOpacity onPress={() => navigation.navigate('Leaderboard')} style={{ marginRight: 15 }}>
+            <Text style={{ fontSize: 20 }}>🏆</Text>
           </TouchableOpacity>
           {/* Profile icon removed from header as per user request */}
 

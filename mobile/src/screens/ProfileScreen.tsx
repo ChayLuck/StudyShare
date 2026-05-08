@@ -72,6 +72,31 @@ export default function ProfileScreen({ navigation }: any) {
     }
   };
 
+  const handleDeleteAccount = async () => {
+    Alert.alert(
+      'Delete Account',
+      'Are you sure you want to delete your account? This action is permanent and all your data will be lost.',
+      [
+        { text: 'Cancel', style: 'cancel' },
+        { 
+          text: 'Delete', 
+          style: 'destructive',
+          onPress: async () => {
+            try {
+              setLoading(true);
+              await api.delete('/auth/delete-account');
+              await handleLogout();
+              Alert.alert('Success', 'Your account has been deleted.');
+            } catch (e: any) {
+              Alert.alert('Error', e.response?.data?.error || 'Failed to delete account');
+              setLoading(false);
+            }
+          }
+        }
+      ]
+    );
+  };
+
   if (loading) {
     return (
       <View style={[styles.loadingContainer, { backgroundColor: colors.background }]}>
@@ -130,7 +155,7 @@ export default function ProfileScreen({ navigation }: any) {
               <Text style={[styles.userName, { color: colors.text }]}>{user?.name || 'User'}</Text>
               <Text style={[styles.userEmail, { color: colors.textSecondary }]}>{user?.email}</Text>
               <View style={[styles.uniChip, { backgroundColor: colors.chip }]}>
-                <Text style={[styles.uniChipText, { color: colors.primary }]}>DOĞUŞ UNIVERSITY</Text>
+                <Text style={[styles.uniChipText, { color: colors.primary }]}>{user?.university || 'NOT SPECIFIED'}</Text>
               </View>
             </View>
             <TouchableOpacity 
@@ -154,7 +179,7 @@ export default function ProfileScreen({ navigation }: any) {
             </View>
             <View style={[styles.statDivider, { backgroundColor: colors.divider }]} />
             <View style={styles.statItem}>
-              <Text style={[styles.statValue, { color: colors.primary }]}>128</Text>
+              <Text style={[styles.statValue, { color: colors.primary }]}>{user?.points || 0}</Text>
               <Text style={[styles.statLabel, { color: colors.textSecondary }]}>Points</Text>
             </View>
           </View>
@@ -163,23 +188,23 @@ export default function ProfileScreen({ navigation }: any) {
         {/* My Activity Section */}
         <Text style={[styles.sectionTitle, { color: colors.text }]}>My Activity</Text>
         <View style={[styles.menuContainer, { backgroundColor: colors.card }]}>
-          <MenuItem icon="❓" label="My Questions" color={colors.text} onPress={() => {}} />
+          <MenuItem icon="❓" label="My Questions" color={colors.text} onPress={() => navigation.navigate('Questions')} />
           <MenuItem icon="💬" label="My Answers" color={colors.text} onPress={() => {}} />
-          <MenuItem icon="❤️" label="Liked Content" color={colors.text} onPress={() => {}} />
+          <MenuItem icon="❤️" label="Liked Content" color={colors.text} onPress={() => navigation.navigate('Favorites')} />
           <MenuItem icon="🔖" label="Saved Items" color={colors.text} last onPress={() => {}} />
         </View>
 
         {/* Account Settings Section */}
         <Text style={[styles.sectionTitle, { color: colors.text }]}>Account Settings</Text>
         <View style={[styles.menuContainer, { backgroundColor: colors.card }]}>
-          <MenuItem icon="👤" label="Personal Information" color={colors.text} onPress={() => {}} />
-          <MenuItem icon="🔒" label="Password & Security" color={colors.text} last onPress={() => {}} />
+          <MenuItem icon="👤" label="Personal Information" color={colors.text} onPress={() => navigation.navigate('EditProfile')} />
+          <MenuItem icon="🔒" label="Password & Security" color={colors.text} last onPress={() => navigation.navigate('EditProfile')} />
         </View>
 
         {/* Danger Zone */}
         <Text style={[styles.sectionTitle, { color: '#ef4444' }]}>Danger Zone</Text>
         <View style={[styles.menuContainer, { backgroundColor: colors.card, borderColor: '#fee2e2', borderWidth: 1 }]}>
-          <MenuItem icon="🗑️" label="Delete Account" color="#ef4444" last onPress={() => {}} />
+          <MenuItem icon="🗑️" label="Delete Account" color="#ef4444" last onPress={handleDeleteAccount} />
         </View>
       </ScrollView>
     </SafeAreaView>

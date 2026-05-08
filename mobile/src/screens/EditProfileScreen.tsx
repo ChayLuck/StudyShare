@@ -10,7 +10,8 @@ import {
   Alert, 
   ActivityIndicator,
   KeyboardAvoidingView,
-  Platform
+  Platform,
+  SafeAreaView
 } from 'react-native';
 import * as ImagePicker from 'expo-image-picker';
 import api from '../services/api';
@@ -19,6 +20,7 @@ import { useTheme } from '../context/ThemeContext';
 export default function EditProfileScreen({ navigation }: any) {
   const { colors } = useTheme();
   const [name, setName] = useState('');
+  const [university, setUniversity] = useState('');
   const [currentPassword, setCurrentPassword] = useState('');
   const [newPassword, setNewPassword] = useState('');
   const [avatar, setAvatar] = useState<any>(null);
@@ -34,6 +36,7 @@ export default function EditProfileScreen({ navigation }: any) {
     try {
       const res = await api.get('/auth/me');
       setName(res.data.user.name || '');
+      setUniversity(res.data.user.university || '');
       setPreviewUri(res.data.user.avatarUrl);
     } catch (e) {
       console.log('Error fetching user data', e);
@@ -65,6 +68,7 @@ export default function EditProfileScreen({ navigation }: any) {
     try {
       const formData = new FormData();
       if (name) formData.append('name', name);
+      if (university) formData.append('university', university);
       if (currentPassword) formData.append('currentPassword', currentPassword);
       if (newPassword) formData.append('newPassword', newPassword);
       
@@ -101,15 +105,23 @@ export default function EditProfileScreen({ navigation }: any) {
   }
 
   return (
-    <KeyboardAvoidingView 
-      behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
-      style={{ flex: 1 }}
-    >
-      <ScrollView style={[styles.container, { backgroundColor: colors.background }]}>
-        <View style={styles.content}>
-          {/* Avatar Section */}
-          <View style={styles.avatarSection}>
-            <TouchableOpacity onPress={pickImage} style={styles.avatarWrapper}>
+    <SafeAreaView style={{ flex: 1, backgroundColor: colors.background }}>
+      <View style={[styles.header, { backgroundColor: colors.card, borderBottomColor: colors.border }]}>
+        <TouchableOpacity style={{ padding: 10 }} onPress={() => navigation.goBack()}>
+          <Text style={{ fontSize: 18, color: colors.text }}>← Back</Text>
+        </TouchableOpacity>
+        <Text style={{ fontSize: 18, fontWeight: 'bold', color: colors.text }}>Edit Profile</Text>
+        <View style={{ width: 60 }} />
+      </View>
+      <KeyboardAvoidingView 
+        behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
+        style={{ flex: 1 }}
+      >
+        <ScrollView style={[styles.container, { backgroundColor: colors.background }]}>
+          <View style={styles.content}>
+            {/* Avatar Section */}
+            <View style={styles.avatarSection}>
+              <TouchableOpacity onPress={pickImage} style={styles.avatarWrapper}>
               {previewUri ? (
                 <Image source={{ uri: previewUri }} style={styles.avatar} />
               ) : (
@@ -133,6 +145,16 @@ export default function EditProfileScreen({ navigation }: any) {
               onChangeText={setName}
               placeholder="Your Name"
               placeholderTextColor={colors.textSecondary}
+            />
+
+            <Text style={[styles.label, { color: colors.text }]}>University</Text>
+            <TextInput
+              style={[styles.input, { backgroundColor: colors.card, color: colors.text, borderColor: colors.border }]}
+              value={university}
+              onChangeText={setUniversity}
+              placeholder="e.g. DOĞUŞ UNIVERSITY"
+              placeholderTextColor={colors.textSecondary}
+              autoCapitalize="characters"
             />
 
             <View style={styles.divider} />
@@ -174,12 +196,21 @@ export default function EditProfileScreen({ navigation }: any) {
         </View>
       </ScrollView>
     </KeyboardAvoidingView>
+    </SafeAreaView>
   );
 }
 
 const styles = StyleSheet.create({
   container: {
     flex: 1,
+  },
+  header: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'space-between',
+    paddingHorizontal: 15,
+    paddingVertical: 15,
+    borderBottomWidth: 1,
   },
   loadingContainer: {
     flex: 1,

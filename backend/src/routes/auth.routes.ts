@@ -7,7 +7,9 @@ import {
   resetPassword,
   refreshToken,
   getMe,
-  updateProfile
+  updateProfile,
+  deleteAccount,
+  getLeaderboard
 } from '../controllers/auth.controller';
 import { requireAuth } from '../middlewares/auth.middleware';
 
@@ -24,5 +26,7 @@ router.post('/reset-password', resetPassword);
 router.post('/refresh-token', refreshToken);
 router.get('/me', requireAuth, getMe);
 router.put('/update-profile', requireAuth, upload.single('avatar'), updateProfile);
+router.delete('/delete-account', requireAuth, deleteAccount);
+router.get('/leaderboard', getLeaderboard);
 
 export default router;
