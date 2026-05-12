@@ -13,12 +13,14 @@ import {
 import api from '../services/api';
 import * as SecureStore from 'expo-secure-store';
 import { useTheme } from '../context/ThemeContext';
+import { useAuth } from '../context/AuthContext';
 
 export default function ProfileScreen({ navigation }: any) {
   const [user, setUser] = useState<any>(null);
   const [loading, setLoading] = useState(true);
   const [isAuthenticated, setIsAuthenticated] = useState(true);
   const { colors, toggleTheme, isDark } = useTheme();
+  const { logout } = useAuth();
 
   useEffect(() => {
     const unsubscribe = navigation.addListener('focus', () => {
@@ -48,7 +50,7 @@ export default function ProfileScreen({ navigation }: any) {
       console.log('Error fetching profile', e.response?.data || e.message);
       if (e.response && (e.response.status === 401 || e.response.status === 404)) {
         // Token is invalid, expired, or user deleted. Logout automatically.
-        handleLogout(false);
+        handleLogout();
       } else {
         const errorMsg = e.response?.data?.message || e.response?.data?.error || e.message || 'Unknown error';
         Alert.alert('Error', `Could not load profile data: ${errorMsg}`);
@@ -58,18 +60,8 @@ export default function ProfileScreen({ navigation }: any) {
     }
   };
 
-  const handleLogout = async (redirect = true) => {
-    await SecureStore.deleteItemAsync('accessToken');
-    await SecureStore.deleteItemAsync('userRole');
-    await SecureStore.deleteItemAsync('userId');
-    setIsAuthenticated(false);
-    setUser(null);
-    if (redirect) {
-      navigation.reset({
-        index: 0,
-        routes: [{ name: 'Tabs' }],
-      });
-    }
+  const handleLogout = async () => {
+    await logout();
   };
 
   const handleDeleteAccount = async () => {
@@ -188,8 +180,8 @@ export default function ProfileScreen({ navigation }: any) {
         {/* My Activity Section */}
         <Text style={[styles.sectionTitle, { color: colors.text }]}>My Activity</Text>
         <View style={[styles.menuContainer, { backgroundColor: colors.card }]}>
-          <MenuItem icon="❓" label="My Questions" color={colors.text} onPress={() => navigation.navigate('Questions')} />
-          <MenuItem icon="💬" label="My Answers" color={colors.text} onPress={() => {}} />
+          <MenuItem icon="❓" label="My Questions" color={colors.text} onPress={() => navigation.navigate('UserQuestions', { userId: user.id })} />
+          <MenuItem icon="💬" label="My Answers" color={colors.text} onPress={() => navigation.navigate('UserQuestions', { answeredByMe: true })} />
           <MenuItem icon="❤️" label="Liked Content" color={colors.text} onPress={() => navigation.navigate('Favorites')} />
           <MenuItem icon="🔖" label="Saved Items" color={colors.text} last onPress={() => {}} />
         </View>

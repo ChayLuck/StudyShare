@@ -29,8 +29,11 @@ const getAPIUrl = () => {
 
 const API_URL = getAPIUrl();
 
+console.log('[API] Using API URL:', API_URL);
+
 const api = axios.create({
   baseURL: API_URL,
+  timeout: 10000, // 10 second timeout
 });
 
 api.interceptors.request.use(async (config) => {
@@ -38,7 +41,25 @@ api.interceptors.request.use(async (config) => {
   if (token) {
     config.headers.Authorization = `Bearer ${token}`;
   }
+  console.log('[API] Request:', config.method?.toUpperCase(), config.url);
   return config;
 });
+
+api.interceptors.response.use(
+  (response) => {
+    console.log('[API] Response:', response.status, response.config.url);
+    return response;
+  },
+  (error) => {
+    console.error('[API] Error:', {
+      url: error.config?.url,
+      method: error.config?.method,
+      status: error.response?.status,
+      message: error.message,
+      code: error.code
+    });
+    return Promise.reject(error);
+  }
+);
 
 export default api;

@@ -22,6 +22,38 @@ model User {
   favoriteNotes   NoteFavorite[]
   reports         Report[]
   comments        Comment[]
+  questions       Question[]
+  answers         Answer[]
+}
+
+model Question {
+  id          String   @id @default(uuid())
+  content     String
+  fileUrl     String?
+  fileType    String?  // 'pdf' | 'image' | 'text'
+  course      String
+  topic       String
+  userId      String
+  user        User     @relation(fields: [userId], references: [id])
+  answers     Answer[]
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+  isResolved  Boolean  @default(false)
+}
+
+model Answer {
+  id          String   @id @default(uuid())
+  content     String
+  fileUrl     String?
+  fileType    String?
+  userId      String
+  user        User     @relation(fields: [userId], references: [id])
+  questionId  String
+  question    Question @relation(fields: [questionId], references: [id], onDelete: Cascade)
+  isCorrect   Boolean  @default(false)
+  isSpam      Boolean  @default(false)
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
 }
 
 model Note {

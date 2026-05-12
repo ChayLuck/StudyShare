@@ -1,8 +1,8 @@
 import React, { useState, useEffect, useRef } from 'react';
 import { View, Text, TextInput, TouchableOpacity, StyleSheet, Alert, KeyboardAvoidingView, Platform, SafeAreaView, Animated, Dimensions } from 'react-native';
 import api from '../services/api';
-import * as SecureStore from 'expo-secure-store';
 import { useTheme } from '../context/ThemeContext';
+import { useAuth } from '../context/AuthContext';
 
 const { width, height } = Dimensions.get('window');
 
@@ -48,6 +48,7 @@ export default function AuthScreen({ navigation }: any) {
   const [password, setPassword] = useState('');
   const [isLogin, setIsLogin] = useState(true);
   const { colors, isDark } = useTheme();
+  const { login } = useAuth();
 
   const handleSubmit = async () => {
     if (!email || !password) {
@@ -55,25 +56,36 @@ export default function AuthScreen({ navigation }: any) {
     }
     
     try {
+      console.log('[AuthScreen] Starting login/register attempt');
       if (isLogin) {
+        console.log('[AuthScreen] Posting to /auth/login with email:', email);
         const response = await api.post('/auth/login', { email, password });
-        await SecureStore.setItemAsync('accessToken', response.data.accessToken);
+        console.log('[AuthScreen] Login response:', response.data);
         if (response.data.user) {
-           await SecureStore.setItemAsync('userRole', response.data.user.role || '');
-           await SecureStore.setItemAsync('userId', response.data.user.id);
+          await login(
+            response.data.accessToken, 
+            response.data.user.id, 
+            response.data.user.role || ''
+          );
+          Alert.alert('Welcome Back', 'Logged in successfully!');
         } else {
-           await SecureStore.deleteItemAsync('userRole'); 
-           await SecureStore.deleteItemAsync('userId');
+           throw new Error('User data missing');
         }
-        Alert.alert('Welcome Back', 'Logged in successfully!');
-        navigation.replace('Tabs');
       } else {
         await api.post('/auth/register', { email, password });
         Alert.alert('Success', 'Registered! Check your email to verify.');
-        setIsLogin(true); // Switch to login screen after successful registration
+        setIsLogin(true);
       }
     } catch (e: any) {
-      Alert.alert('Error', e.response?.data?.error || 'Something went wrong');
+      console.error('[AuthScreen] Auth error:', {
+        message: e.message,
+        response: e.response?.data,
+        status: e.response?.status,
+        code: e.code,
+        isAxiosError: e.isAxiosError
+      });
+      const errorMsg = e.response?.data?.error || e.message || 'Something went wrong';
+      Alert.alert('Error', errorMsg);
     }
   };
 
