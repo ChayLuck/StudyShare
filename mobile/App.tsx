@@ -6,6 +6,11 @@ import { createBottomTabNavigator } from '@react-navigation/bottom-tabs';
 import { Text, View, ActivityIndicator } from 'react-native';
 import { StatusBar } from 'expo-status-bar';
 
+import { Ionicons } from "@expo/vector-icons";
+import type { ComponentProps } from "react";
+
+type IoniconName = ComponentProps<typeof Ionicons>["name"];
+
 import HomeScreen from './src/screens/HomeScreen';
 import AuthScreen from './src/screens/AuthScreen';
 import UploadScreen from './src/screens/UploadScreen';
@@ -31,15 +36,15 @@ function TabNavigator() {
     <Tab.Navigator 
       screenOptions={({ route }) => ({
         tabBarIcon: ({ focused, color, size }) => {
-          let icon = '❓';
-          if (route.name === 'Dashboard') icon = '🏠';
-          else if (route.name === 'Questions') icon = '❓';
-          else if (route.name === 'Favorites') icon = '❤️';
-          else if (route.name === 'Profile') icon = '👤';
+          let iconName: IoniconName = 'help-circle';
+          if (route.name === 'Dashboard') iconName = 'home';
+          else if (route.name === 'Questions') iconName = 'help-circle';
+          else if (route.name === 'Favorites') iconName = 'heart';
+          else if (route.name === 'Profile') iconName = 'person';
           
           return (
             <View style={{ alignItems: 'center', justifyContent: 'center' }}>
-              <Text style={{ fontSize: size, color: focused ? colors.primary : color }}>{icon}</Text>
+              <Ionicons name={iconName} size={size} color={focused ? colors.primary : color} />
             </View>
           );
         },

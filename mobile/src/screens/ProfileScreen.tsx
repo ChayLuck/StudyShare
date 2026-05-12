@@ -10,6 +10,7 @@ import {
   Alert,
   ActivityIndicator
 } from 'react-native';
+import { Ionicons } from '@expo/vector-icons';
 import api from '../services/api';
 import * as SecureStore from 'expo-secure-store';
 import { useTheme } from '../context/ThemeContext';
@@ -124,7 +125,7 @@ export default function ProfileScreen({ navigation }: any) {
         <Text style={[styles.headerTitle, { color: colors.text }]}>StudyShare</Text>
         <View style={styles.headerLinks}>
           <TouchableOpacity onPress={toggleTheme} style={styles.iconButton}>
-            <Text style={{ fontSize: 20 }}>{isDark ? '☀️' : '🌙'}</Text>
+            <Ionicons name={isDark ? 'sunny' : 'moon'} size={20} color={colors.text} />
           </TouchableOpacity>
           <TouchableOpacity onPress={() => handleLogout()}>
             <Text style={styles.logoutText}>Logout</Text>
@@ -140,7 +141,7 @@ export default function ProfileScreen({ navigation }: any) {
               {user?.avatarUrl ? (
                 <Image source={{ uri: user.avatarUrl }} style={styles.avatarImage} />
               ) : (
-                <Text style={styles.avatarEmoji}>👤</Text>
+                <Ionicons name="person" size={40} color={colors.textSecondary} />
               )}
             </View>
             <View style={styles.profileInfo}>
@@ -154,7 +155,7 @@ export default function ProfileScreen({ navigation }: any) {
               style={[styles.editButton, { borderColor: colors.border }]}
               onPress={() => navigation.navigate('EditProfile')}
             >
-              <Text style={[styles.editButtonText, { color: colors.primary }]}>📝 Edit Profile</Text>
+              <Text style={[styles.editButtonText, { color: colors.primary }]}> Edit Profile</Text>
             </TouchableOpacity>
           </View>
 
@@ -180,23 +181,23 @@ export default function ProfileScreen({ navigation }: any) {
         {/* My Activity Section */}
         <Text style={[styles.sectionTitle, { color: colors.text }]}>My Activity</Text>
         <View style={[styles.menuContainer, { backgroundColor: colors.card }]}>
-          <MenuItem icon="❓" label="My Questions" color={colors.text} onPress={() => navigation.navigate('UserQuestions', { userId: user.id })} />
-          <MenuItem icon="💬" label="My Answers" color={colors.text} onPress={() => navigation.navigate('UserQuestions', { answeredByMe: true })} />
-          <MenuItem icon="❤️" label="Liked Content" color={colors.text} onPress={() => navigation.navigate('Favorites')} />
-          <MenuItem icon="🔖" label="Saved Items" color={colors.text} last onPress={() => {}} />
+          <MenuItem icon="help-circle" label="My Questions" color={colors.text} onPress={() => navigation.navigate('UserQuestions', { userId: user.id })} />
+          <MenuItem icon="chatbubble" label="My Answers" color={colors.text} onPress={() => navigation.navigate('UserQuestions', { answeredByMe: true })} />
+          <MenuItem icon="heart" label="Liked Content" color={colors.text} onPress={() => navigation.navigate('Favorites')} />
+          <MenuItem icon="bookmark" label="Saved Items" color={colors.text} last onPress={() => {}} />
         </View>
 
         {/* Account Settings Section */}
         <Text style={[styles.sectionTitle, { color: colors.text }]}>Account Settings</Text>
         <View style={[styles.menuContainer, { backgroundColor: colors.card }]}>
-          <MenuItem icon="👤" label="Personal Information" color={colors.text} onPress={() => navigation.navigate('EditProfile')} />
-          <MenuItem icon="🔒" label="Password & Security" color={colors.text} last onPress={() => navigation.navigate('EditProfile')} />
+          <MenuItem icon="person" label="Personal Information" color={colors.text} onPress={() => navigation.navigate('EditProfile')} />
+          <MenuItem icon="lock-closed" label="Password & Security" color={colors.text} last onPress={() => navigation.navigate('EditProfile')} />
         </View>
 
         {/* Danger Zone */}
         <Text style={[styles.sectionTitle, { color: '#ef4444' }]}>Danger Zone</Text>
         <View style={[styles.menuContainer, { backgroundColor: colors.card, borderColor: '#fee2e2', borderWidth: 1 }]}>
-          <MenuItem icon="🗑️" label="Delete Account" color="#ef4444" last onPress={handleDeleteAccount} />
+          <MenuItem icon="trash" label="Delete Account" color="#ef4444" last onPress={handleDeleteAccount} />
         </View>
       </ScrollView>
     </SafeAreaView>
@@ -215,11 +216,11 @@ function MenuItem({ icon, label, color, last, onPress }: any) {
     >
       <View style={styles.menuItemLeft}>
         <View style={[styles.menuIconContainer, { backgroundColor: colors.chip }]}>
-          <Text style={{ fontSize: 16 }}>{icon}</Text>
+          <Ionicons name={icon} size={16} color={color} />
         </View>
         <Text style={[styles.menuLabel, { color }]}>{label}</Text>
       </View>
-      <Text style={{ color: colors.textSecondary, fontSize: 18 }}>›</Text>
+      <Ionicons name="chevron-forward" size={18} color={colors.textSecondary} />
     </TouchableOpacity>
   );
 }

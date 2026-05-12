@@ -4,6 +4,7 @@ import {
   Image, ActivityIndicator, SafeAreaView, ScrollView,
   Modal, TextInput, Alert, KeyboardAvoidingView, Platform, Linking
 } from 'react-native';
+import { Ionicons } from '@expo/vector-icons';
 import { useTheme } from '../context/ThemeContext';
 import api from '../services/api';
 import * as SecureStore from 'expo-secure-store';
@@ -184,7 +185,7 @@ export default function QuestionDetailScreen({ route, navigation }: any) {
 
       {question.isResolved && (
         <View style={[styles.solvedBadge, { backgroundColor: '#10b981' }]}>
-          <Text style={styles.solvedBadgeText}>✓ Solved</Text>
+          <Text style={styles.solvedBadgeText}>Solved</Text>
         </View>
       )}
 
@@ -200,11 +201,6 @@ export default function QuestionDetailScreen({ route, navigation }: any) {
             style={styles.attachmentImage} 
             resizeMode="contain" 
           />
-          {question.fileType === 'pdf' && (
-            <View style={styles.pdfBadgeOverlay}>
-              <Text style={styles.pdfBadgeText}>📄 PDF Document</Text>
-            </View>
-          )}
         </TouchableOpacity>
       )}
 
@@ -234,7 +230,8 @@ export default function QuestionDetailScreen({ route, navigation }: any) {
           </View>
           {item.isCorrect && (
             <View style={styles.correctBadge}>
-              <Text style={styles.correctText}>✓ Best Answer</Text>
+              <Ionicons name="checkmark" size={14} color="#10b981" />
+              <Text style={styles.correctText}> Best Answer</Text>
             </View>
           )}
         </View>
@@ -288,7 +285,8 @@ export default function QuestionDetailScreen({ route, navigation }: any) {
 
         {item.isSpam && (
           <View style={styles.spamNotice}>
-            <Text style={styles.spamText}>⚠️ This answer was reported as spam.</Text>
+            <Ionicons name="warning" size={14} color="#ef4444" />
+            <Text style={styles.spamText}> This answer was reported as spam.</Text>
           </View>
         )}
       </View>
@@ -312,7 +310,7 @@ export default function QuestionDetailScreen({ route, navigation }: any) {
         <Text style={[styles.headerTitle, { color: colors.text }]}>Question</Text>
         {question.userId === currentUserId ? (
           <TouchableOpacity onPress={handleDeleteQuestion} style={styles.deleteHeaderBtn}>
-            <Text style={{ fontSize: 20 }}>🗑️</Text>
+            <Ionicons name="trash" size={16} color={colors.primary} />
           </TouchableOpacity>
         ) : (
           <View style={{ width: 50 }} />
@@ -363,17 +361,20 @@ export default function QuestionDetailScreen({ route, navigation }: any) {
 
               <View style={styles.attachRow}>
                 <TouchableOpacity style={styles.attachBtn} onPress={handlePickImage}>
-                  <Text style={styles.attachBtnText}>📸 Image</Text>
+                  <Ionicons name="camera" size={16} color={colors.primary} />
+                  <Text style={styles.attachBtnText}> Image</Text>
                 </TouchableOpacity>
                 <TouchableOpacity style={styles.attachBtn} onPress={handlePickDocument}>
-                  <Text style={styles.attachBtnText}>📄 PDF</Text>
+                  <Ionicons name="document" size={16} color={colors.primary} />
+                  <Text style={styles.attachBtnText}> PDF</Text>
                 </TouchableOpacity>
               </View>
 
               {selectedFile && (
                 <View style={[styles.selectedFile, { backgroundColor: colors.chip }]}>
+                  <Ionicons name="attach" size={16} color={colors.chipText} />
                   <Text style={[styles.selectedFileText, { color: colors.chipText }]} numberOfLines={1}>
-                    📎 {selectedFile.name || 'File selected'}
+                    {selectedFile.name || 'File selected'}
                   </Text>
                   <TouchableOpacity onPress={() => setSelectedFile(null)}>
                     <Text style={{ color: '#ef4444' }}>Remove</Text>

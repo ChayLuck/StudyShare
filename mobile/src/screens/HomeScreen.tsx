@@ -1,5 +1,6 @@
 import React, { useEffect, useState } from 'react';
 import { View, Text, FlatList, TouchableOpacity, StyleSheet, Alert, Linking, SafeAreaView, ActivityIndicator, Image, TextInput } from 'react-native';
+import { Ionicons } from '@expo/vector-icons';
 import api from '../services/api';
 import * as SecureStore from 'expo-secure-store';
 import { useTheme } from '../context/ThemeContext';
@@ -202,11 +203,11 @@ export default function HomeScreen({ navigation }: any) {
 
         <View style={{ flexDirection: 'row', alignItems: 'center' }}>
           <TouchableOpacity onPress={() => toggleFavorite(item.id)} style={{ marginRight: 15 }}>
-            <Text style={{ fontSize: 22 }}>{favorites.includes(item.id) ? '❤️' : '🤍'}</Text>
+            <Ionicons name={favorites.includes(item.id) ? 'heart' : 'heart-outline'} size={22} color={favorites.includes(item.id) ? '#ef4444' : colors.textSecondary} />
           </TouchableOpacity>
 
-          <TouchableOpacity onPress={() => navigation.navigate('NoteDetail', { note: item })} style={{ marginRight: 15 }}>
-            <Text style={{ fontSize: 22 }}>💬</Text>
+          <TouchableOpacity onPress={() => navigation.navigate('NoteDetail', { note: item })} style={{ marginRight: 10 }}>
+            <Ionicons name="chatbubble-outline" size={20} color={colors.textSecondary} />
           </TouchableOpacity>
 
           {isLogged && (
@@ -216,11 +217,11 @@ export default function HomeScreen({ navigation }: any) {
                   style={[styles.reportButton, { marginRight: 10 }]} 
                   onPress={() => handleDeleteNote(item.id)}
                 >
-                  <Text style={[styles.reportButtonText, { color: '#ef4444', fontSize: 18 }]}>🗑</Text>
+                  <Ionicons name="trash" size={18} color="#ef4444" />
                 </TouchableOpacity>
               )}
               <TouchableOpacity style={styles.reportButton} onPress={() => reportNote(item.id)}>
-                <Text style={styles.reportButtonText}>⚠</Text>
+                <Ionicons name="warning" size={18} color="#ef4444" />
               </TouchableOpacity>
             </View>
           )}
@@ -235,11 +236,11 @@ export default function HomeScreen({ navigation }: any) {
       <View style={[styles.header, { backgroundColor: colors.card, borderBottomColor: colors.border }]}>
         <Text style={[styles.headerTitle, { color: colors.text }]}>StudyShare</Text>
         <View style={styles.headerLinks}>
-          <TouchableOpacity onPress={toggleTheme} style={{ marginRight: 15 }}>
-            <Text style={{ fontSize: 20 }}>{isDark ? '☀️' : '🌙'}</Text>
+          <TouchableOpacity onPress={toggleTheme} style={{ marginRight: 10 }}>
+            <Ionicons name={isDark ? 'sunny' : 'moon'} size={20} color={colors.text} />
           </TouchableOpacity>
           <TouchableOpacity onPress={() => navigation.navigate('Leaderboard')} style={{ marginRight: 15 }}>
-            <Text style={{ fontSize: 20 }}>🏆</Text>
+            <Ionicons name="trophy" size={20} color={colors.text} />
           </TouchableOpacity>
           {/* Profile icon removed from header as per user request */}
 
@@ -265,7 +266,7 @@ export default function HomeScreen({ navigation }: any) {
       {/* Search Bar */}
       <View style={[styles.searchContainer, { backgroundColor: colors.card, borderBottomColor: colors.border }]}>
         <View style={[styles.searchWrapper, { backgroundColor: colors.background, borderColor: colors.border }]}>
-          <Text style={styles.searchIcon}>🔍</Text>
+          <Ionicons name="search" size={20} color={colors.text} />
           <TextInput
             style={[styles.searchInput, { color: colors.text }]}
             placeholder="Search school or course..."
@@ -275,7 +276,7 @@ export default function HomeScreen({ navigation }: any) {
           />
           {searchQuery !== '' && (
             <TouchableOpacity onPress={() => handleSearch('')}>
-              <Text style={{ marginRight: 10 }}>✕</Text>
+              <Ionicons name="close" size={20} color={colors.textSecondary} style={{ marginRight: 10 }} />
             </TouchableOpacity>
           )}
         </View>

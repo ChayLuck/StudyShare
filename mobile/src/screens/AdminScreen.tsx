@@ -1,5 +1,6 @@
 import React, { useEffect, useState } from 'react';
 import { View, Text, FlatList, TouchableOpacity, StyleSheet, Alert, Linking, SafeAreaView } from 'react-native';
+import { Ionicons } from '@expo/vector-icons';
 import api from '../services/api';
 
 export default function AdminScreen({ navigation }: any) {
@@ -68,15 +69,18 @@ export default function AdminScreen({ navigation }: any) {
       <Text style={styles.userInfo}>Uploader: <Text style={{fontWeight: 'bold'}}>{item.user.email}</Text></Text>
 
       <TouchableOpacity style={styles.viewButton} onPress={() => viewFile(item.fileUrl)}>
-        <Text style={styles.viewButtonText}>📄 View Content</Text>
+        <Ionicons name="document" size={16} color="#4F46E5" />
+        <Text style={styles.viewButtonText}> View Content</Text>
       </TouchableOpacity>
 
       <View style={styles.actionRow}>
         <TouchableOpacity style={styles.verifyBtn} onPress={() => verifyNote(item.id)}>
-          <Text style={styles.verifyBtnText}>✔ Mark as Safe</Text>
+          <Ionicons name="checkmark" size={16} color="#10b981" />
+          <Text style={styles.verifyBtnText}> Mark as Safe</Text>
         </TouchableOpacity>
         <TouchableOpacity style={styles.deleteBtn} onPress={() => deleteNote(item.id)}>
-          <Text style={styles.deleteBtnText}>🗑 Delete Note</Text>
+          <Ionicons name="trash" size={16} color="#ef4444" />
+          <Text style={styles.deleteBtnText}> Delete Note</Text>
         </TouchableOpacity>
       </View>
     </View>

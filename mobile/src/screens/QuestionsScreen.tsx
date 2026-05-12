@@ -5,6 +5,7 @@ import {
   TextInput, RefreshControl, SafeAreaView, ActivityIndicator,
   Modal, ScrollView, Alert, Platform, Image, Linking
 } from 'react-native';
+import { Ionicons } from '@expo/vector-icons';
 import { useTheme } from '../context/ThemeContext';
 import api from '../services/api';
 import * as ImagePicker from 'expo-image-picker';
@@ -183,7 +184,7 @@ export default function QuestionsScreen({ route, navigation }: any) {
         </View>
         {item.isResolved && (
           <View style={styles.resolvedBadge}>
-            <Text style={styles.resolvedText}>✓ Solved</Text>
+            <Text style={styles.resolvedText}>Solved</Text>
           </View>
         )}
       </View>
@@ -202,11 +203,6 @@ export default function QuestionsScreen({ route, navigation }: any) {
             style={styles.previewImage} 
             resizeMode="cover" 
           />
-          {item.fileType === 'pdf' && (
-            <View style={styles.pdfOverlay}>
-              <Text style={styles.pdfOverlayText}>📄 PDF</Text>
-            </View>
-          )}
         </TouchableOpacity>
       )}
 
@@ -221,14 +217,14 @@ export default function QuestionsScreen({ route, navigation }: any) {
         </View>
         <View style={{ flexDirection: 'row', alignItems: 'center' }}>
           <Text style={[styles.answerCount, { color: colors.primary }]}>
-             💬 {item._count.answers}
+             <Ionicons name="chatbubble" size={16} color={colors.primary} /> {item._count.answers}
           </Text>
           {item.userId === currentUserId && (
              <TouchableOpacity 
                onPress={() => handleDeleteQuestion(item.id)}
                style={{ marginLeft: 15 }}
              >
-               <Text style={{ fontSize: 18 }}>🗑️</Text>
+               <Ionicons name="trash" size={16} color={colors.primary} />
              </TouchableOpacity>
           )}
         </View>
@@ -360,17 +356,20 @@ export default function QuestionsScreen({ route, navigation }: any) {
               <Text style={[styles.label, { color: colors.text }]}>Attachment (Optional)</Text>
               <View style={styles.attachRow}>
                 <TouchableOpacity style={styles.attachBtn} onPress={handlePickImage}>
-                  <Text style={styles.attachBtnText}>📸 Image</Text>
+                  <Ionicons name="camera" size={16} color={colors.primary} />
+                  <Text style={styles.attachBtnText}> Image</Text>
                 </TouchableOpacity>
                 <TouchableOpacity style={styles.attachBtn} onPress={handlePickDocument}>
-                  <Text style={styles.attachBtnText}>📄 PDF</Text>
+                  <Ionicons name="document" size={16} color={colors.primary} />
+                  <Text style={styles.attachBtnText}> PDF</Text>
                 </TouchableOpacity>
               </View>
 
               {selectedFile && (
                 <View style={[styles.selectedFile, { backgroundColor: colors.chip }]}>
+                  <Ionicons name="attach" size={16} color={colors.chipText} />
                   <Text style={[styles.selectedFileText, { color: colors.chipText }]} numberOfLines={1}>
-                    📎 {selectedFile.name || 'Selected image'}
+                    {selectedFile.name || 'Selected image'}
                   </Text>
                   <TouchableOpacity onPress={() => setSelectedFile(null)}>
                     <Text style={{ color: '#ef4444' }}>Remove</Text>
