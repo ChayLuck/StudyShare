@@ -12,10 +12,12 @@ import { sendVerificationEmail, sendPasswordResetEmail } from '../services/email
 import { uploadToStorage } from '../services/storage.service';
 
 export const register = async (req: Request, res: Response): Promise<void> => {
+  console.log('[REGISTER] Request received:', req.body.email);
   try {
     const { email, password, name } = req.body;
     
     if (!email || !password) {
+      console.log('[REGISTER] Missing email or password');
       res.status(400).json({ error: 'Email and password are required' });
       return;
     }
@@ -37,7 +39,9 @@ export const register = async (req: Request, res: Response): Promise<void> => {
       },
     });
 
+    console.log('[REGISTER] User created:', { email: user.email, id: user.id });
     const verificationToken = generateEmailVerificationToken(user.email);
+    console.log('[REGISTER] Sending verification email to', user.email);
     await sendVerificationEmail(user.email, verificationToken);
 
     res.status(201).json({ message: 'User registered. Please check email to verify.' });
