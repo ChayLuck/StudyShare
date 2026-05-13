@@ -2,26 +2,29 @@
 import React, { useState, useEffect, useCallback } from 'react';
 import { 
   View, Text, StyleSheet, FlatList, TouchableOpacity, 
-  TextInput, RefreshControl, SafeAreaView, ActivityIndicator,
+  TextInput, RefreshControl, ActivityIndicator,
   Modal, ScrollView, Alert, Platform, Image, Linking
 } from 'react-native';
+import { SafeAreaView } from 'react-native-safe-area-context';
 import { Ionicons } from '@expo/vector-icons';
 import { useTheme } from '../context/ThemeContext';
 import api from '../services/api';
 import * as ImagePicker from 'expo-image-picker';
 import * as DocumentPicker from 'expo-document-picker';
 import * as SecureStore from 'expo-secure-store';
+import { useAuth } from '../context/AuthContext';
 
 const COURSES = ['Calculus', 'Physics', 'Chemistry', 'Biology', 'History', 'Other'];
 
 export default function QuestionsScreen({ route, navigation }: any) {
   const { colors, isDark } = useTheme();
+  const { userId: currentUserId, isLoggedIn } = useAuth();
+  
   const [questions, setQuestions] = useState([]);
   const [loading, setLoading] = useState(true);
   const [refreshing, setRefreshing] = useState(false);
   const [search, setSearch] = useState('');
   const [selectedCourse, setSelectedCourse] = useState<string | null>(null);
-  const [currentUserId, setCurrentUserId] = useState<string | null>(null);
   
   // Filtering params from navigation
   const userIdFilter = route.params?.userId;
@@ -69,11 +72,6 @@ export default function QuestionsScreen({ route, navigation }: any) {
 
   useEffect(() => {
     fetchQuestions();
-    const getUserId = async () => {
-      const id = await SecureStore.getItemAsync('userId');
-      setCurrentUserId(id);
-    };
-    getUserId();
   }, [fetchQuestions]);
 
   const onRefresh = () => {

@@ -1,23 +1,24 @@
 import React, { useState, useEffect, useCallback } from 'react';
 import { 
-  View, Text, StyleSheet, FlatList, TouchableOpacity, 
-  Image, ActivityIndicator, SafeAreaView, ScrollView,
+  View, Text, StyleSheet, FlatList, TouchableOpacity,
+  Image, ActivityIndicator, ScrollView,
   Modal, TextInput, Alert, KeyboardAvoidingView, Platform, Linking
 } from 'react-native';
+import { SafeAreaView } from 'react-native-safe-area-context';
 import { Ionicons } from '@expo/vector-icons';
 import { useTheme } from '../context/ThemeContext';
 import api from '../services/api';
-import * as SecureStore from 'expo-secure-store';
 import * as ImagePicker from 'expo-image-picker';
 import * as DocumentPicker from 'expo-document-picker';
+import { useAuth } from '../context/AuthContext';
 
 export default function QuestionDetailScreen({ route, navigation }: any) {
   const { questionId } = route.params;
   const { colors, isDark } = useTheme();
+  const { userId: currentUserId } = useAuth();
   
   const [question, setQuestion] = useState<any>(null);
   const [loading, setLoading] = useState(true);
-  const [currentUserId, setCurrentUserId] = useState<string | null>(null);
   
   // Answer Modal State
   const [showAnswerModal, setShowAnswerModal] = useState(false);
@@ -43,9 +44,6 @@ export default function QuestionDetailScreen({ route, navigation }: any) {
       setLoading(true);
       const response = await api.get(`/questions/${questionId}`);
       setQuestion(response.data.question);
-      
-      const userId = await SecureStore.getItemAsync('userId');
-      setCurrentUserId(userId);
     } catch (error) {
       console.error('Fetch question detail failed:', error);
       Alert.alert('Error', 'Failed to load question details');

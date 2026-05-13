@@ -1,5 +1,6 @@
 import React, { useState, useEffect, useRef } from 'react';
-import { View, Text, TextInput, TouchableOpacity, StyleSheet, Alert, KeyboardAvoidingView, Platform, SafeAreaView, Animated, Dimensions } from 'react-native';
+import { View, Text, TextInput, TouchableOpacity, StyleSheet, Alert, KeyboardAvoidingView, Platform, Animated, Dimensions } from 'react-native';
+import { SafeAreaView } from 'react-native-safe-area-context';
 import api from '../services/api';
 import { useTheme } from '../context/ThemeContext';
 import { useAuth } from '../context/AuthContext';
@@ -64,6 +65,7 @@ export default function AuthScreen({ navigation }: any) {
         if (response.data.user) {
           await login(
             response.data.accessToken, 
+            response.data.refreshToken,
             response.data.user.id, 
             response.data.user.role || ''
           );

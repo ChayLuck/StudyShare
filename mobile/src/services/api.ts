@@ -50,13 +50,40 @@ api.interceptors.response.use(
     console.log('[API] Response:', response.status, response.config.url);
     return response;
   },
-  (error) => {
+  async (error) => {
+    const originalRequest = error.config;
+
+    if (error.response?.status === 401 && !originalRequest._retry && !originalRequest.url?.includes('/auth/login') && !originalRequest.url?.includes('/auth/refresh-token')) {
+      originalRequest._retry = true;
+      console.log('[API] 401 detected, attempting token refresh...');
+
+      try {
+        const refreshToken = await SecureStore.getItemAsync('refreshToken');
+        if (!refreshToken) throw new Error('No refresh token available');
+
+        const res = await axios.post(`${API_URL}/auth/refresh-token`, { token: refreshToken });
+        const { accessToken } = res.data;
+
+        await SecureStore.setItemAsync('accessToken', accessToken);
+        console.log('[API] Token refreshed successfully');
+
+        originalRequest.headers.Authorization = `Bearer ${accessToken}`;
+        return api(originalRequest);
+      } catch (refreshError) {
+        console.error('[API] Refresh failed, clearing session:', refreshError);
+        await SecureStore.deleteItemAsync('accessToken');
+        await SecureStore.deleteItemAsync('refreshToken');
+        await SecureStore.deleteItemAsync('userId');
+        await SecureStore.deleteItemAsync('userRole');
+        // This will eventually cause AuthContext to set isLoggedIn to false
+        return Promise.reject(refreshError);
+      }
+    }
+
     console.error('[API] Error:', {
       url: error.config?.url,
-      method: error.config?.method,
       status: error.response?.status,
-      message: error.message,
-      code: error.code
+      message: error.message
     });
     return Promise.reject(error);
   }

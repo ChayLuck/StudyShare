@@ -10,9 +10,9 @@ import {
   Alert, 
   ActivityIndicator,
   KeyboardAvoidingView,
-  Platform,
-  SafeAreaView
+  Platform
 } from 'react-native';
+import { SafeAreaView } from 'react-native-safe-area-context';
 import * as ImagePicker from 'expo-image-picker';
 import api from '../services/api';
 import { useTheme } from '../context/ThemeContext';

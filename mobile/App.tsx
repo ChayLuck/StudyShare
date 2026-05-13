@@ -5,6 +5,7 @@ import { createNativeStackNavigator } from '@react-navigation/native-stack';
 import { createBottomTabNavigator } from '@react-navigation/bottom-tabs';
 import { Text, View, ActivityIndicator } from 'react-native';
 import { StatusBar } from 'expo-status-bar';
+import { SafeAreaProvider, useSafeAreaInsets } from 'react-native-safe-area-context';
 
 import { Ionicons } from "@expo/vector-icons";
 import type { ComponentProps } from "react";
@@ -31,6 +32,7 @@ const Tab = createBottomTabNavigator();
 
 function TabNavigator() {
   const { colors } = useTheme();
+  const insets = useSafeAreaInsets();
   
   return (
     <Tab.Navigator 
@@ -53,8 +55,8 @@ function TabNavigator() {
         tabBarStyle: { 
           backgroundColor: colors.card,
           borderTopColor: colors.border,
-          height: 60,
-          paddingBottom: 8
+          height: 60 + insets.bottom,
+          paddingBottom: insets.bottom > 0 ? insets.bottom : 8
         },
         headerShown: false
       })}
@@ -104,10 +106,12 @@ function AppContent() {
 
 export default function App() {
   return (
-    <AuthProvider>
-      <ThemeProvider>
-        <AppContent />
-      </ThemeProvider>
-    </AuthProvider>
+    <SafeAreaProvider>
+      <AuthProvider>
+        <ThemeProvider>
+          <AppContent />
+        </ThemeProvider>
+      </AuthProvider>
+    </SafeAreaProvider>
   );
 }

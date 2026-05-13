@@ -1,5 +1,6 @@
 import React, { useEffect, useState } from 'react';
-import { View, Text, FlatList, TouchableOpacity, StyleSheet, Alert, Linking, SafeAreaView } from 'react-native';
+import { View, Text, FlatList, TouchableOpacity, StyleSheet, Alert, Linking } from 'react-native';
+import { SafeAreaView } from 'react-native-safe-area-context';
 import { Ionicons } from '@expo/vector-icons';
 import api from '../services/api';
 

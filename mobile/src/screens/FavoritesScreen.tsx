@@ -1,5 +1,6 @@
 import React, { useEffect, useState } from 'react';
-import { View, Text, FlatList, TouchableOpacity, StyleSheet, SafeAreaView, ActivityIndicator, Image, Linking, Alert } from 'react-native';
+import { View, Text, FlatList, TouchableOpacity, StyleSheet, ActivityIndicator, Image, Linking, Alert } from 'react-native';
+import { SafeAreaView } from 'react-native-safe-area-context';
 import api from '../services/api';
 import { useTheme } from '../context/ThemeContext';
 

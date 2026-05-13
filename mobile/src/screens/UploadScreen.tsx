@@ -1,12 +1,14 @@
 import React, { useState } from 'react';
-import { View, Text, TextInput, TouchableOpacity, StyleSheet, Alert, SafeAreaView, ScrollView, Platform } from 'react-native';
+import { View, Text, TextInput, TouchableOpacity, StyleSheet, Alert, ScrollView, Platform } from 'react-native';
+import { SafeAreaView } from 'react-native-safe-area-context';
 import * as DocumentPicker from 'expo-document-picker';
-import * as SecureStore from 'expo-secure-store';
 import api from '../services/api';
 import { useTheme } from '../context/ThemeContext';
+import { useAuth } from '../context/AuthContext';
 
 export default function UploadScreen({ navigation }: any) {
   const { colors, isDark } = useTheme();
+  const { accessToken } = useAuth();
   const [courseName, setCourseName] = useState('');
   const [schoolName, setSchoolName] = useState('');
   const [description, setDescription] = useState('');
@@ -63,21 +65,11 @@ export default function UploadScreen({ navigation }: any) {
     } as any);
 
     try {
-      const token = await SecureStore.getItemAsync('accessToken');
-      const apiBase = api.defaults.baseURL || 'http://localhost:4000/api';
-      
-      const response = await fetch(`${apiBase}/notes`, {
-        method: 'POST',
+      const response = await api.post('/notes', formData, {
         headers: {
-          'Authorization': `Bearer ${token}`
+          'Content-Type': 'multipart/form-data',
         },
-        body: formData,
       });
-
-      if (!response.ok) {
-        const err = await response.json();
-        throw new Error(err.error || 'Failed to upload');
-      }
 
       Alert.alert('Success', 'Note uploaded successfully!');
       navigation.goBack();

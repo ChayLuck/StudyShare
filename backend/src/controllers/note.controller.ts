@@ -166,6 +166,9 @@ export const deleteNote = async (req: AuthRequest, res: Response): Promise<void>
 
     // Delete associated favorites and reports first to avoid foreign key constraint errors
     await prisma.$transaction([
+      prisma.comment.deleteMany({
+        where: { noteId: id }
+      }),
       prisma.noteFavorite.deleteMany({
         where: { noteId: id }
       }),

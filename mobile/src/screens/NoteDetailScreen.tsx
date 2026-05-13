@@ -3,7 +3,6 @@ import {
   View, 
   Text, 
   StyleSheet, 
-  SafeAreaView, 
   FlatList, 
   TextInput, 
   TouchableOpacity, 
@@ -13,29 +12,24 @@ import {
   Platform,
   Alert
 } from 'react-native';
+import { SafeAreaView } from 'react-native-safe-area-context';
 import api from '../services/api';
-import * as SecureStore from 'expo-secure-store';
 import { useTheme } from '../context/ThemeContext';
+import { useAuth } from '../context/AuthContext';
 
 export default function NoteDetailScreen({ route, navigation }: any) {
   const { note } = route.params;
   const { colors, isDark } = useTheme();
+  const { isLoggedIn: isLogged } = useAuth();
   
   const [comments, setComments] = useState<any[]>([]);
   const [newComment, setNewComment] = useState('');
   const [loading, setLoading] = useState(true);
   const [submitting, setSubmitting] = useState(false);
-  const [isLogged, setIsLogged] = useState(false);
 
   useEffect(() => {
-    checkToken();
     fetchComments();
   }, []);
-
-  const checkToken = async () => {
-    const token = await SecureStore.getItemAsync('accessToken');
-    setIsLogged(!!token);
-  };
 
   const fetchComments = async () => {
     try {

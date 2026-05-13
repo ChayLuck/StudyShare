@@ -1,15 +1,15 @@
 import React, { useEffect, useState } from 'react';
 import { 
   View, 
-  Text, 
-  StyleSheet, 
-  SafeAreaView, 
+  Text,
+  StyleSheet,
   TouchableOpacity, 
   ScrollView, 
   Image, 
   Alert,
   ActivityIndicator
 } from 'react-native';
+import { SafeAreaView } from 'react-native-safe-area-context';
 import { Ionicons } from '@expo/vector-icons';
 import api from '../services/api';
 import * as SecureStore from 'expo-secure-store';
@@ -17,29 +17,23 @@ import { useTheme } from '../context/ThemeContext';
 import { useAuth } from '../context/AuthContext';
 
 export default function ProfileScreen({ navigation }: any) {
+  const { colors, toggleTheme, isDark } = useTheme();
+  const { isLoggedIn, logout } = useAuth();
+
   const [user, setUser] = useState<any>(null);
   const [loading, setLoading] = useState(true);
-  const [isAuthenticated, setIsAuthenticated] = useState(true);
-  const { colors, toggleTheme, isDark } = useTheme();
-  const { logout } = useAuth();
 
   useEffect(() => {
     const unsubscribe = navigation.addListener('focus', () => {
-      checkAuthAndFetch();
+      if (isLoggedIn) {
+        fetchProfile();
+      } else {
+        setLoading(false);
+      }
     });
     return unsubscribe;
-  }, [navigation]);
+  }, [navigation, isLoggedIn]);
 
-  const checkAuthAndFetch = async () => {
-    const token = await SecureStore.getItemAsync('accessToken');
-    if (!token) {
-      setIsAuthenticated(false);
-      setLoading(false);
-      return;
-    }
-    setIsAuthenticated(true);
-    fetchProfile();
-  };
 
   const fetchProfile = async () => {
     try {
@@ -51,7 +45,7 @@ export default function ProfileScreen({ navigation }: any) {
       console.log('Error fetching profile', e.response?.data || e.message);
       if (e.response && (e.response.status === 401 || e.response.status === 404)) {
         // Token is invalid, expired, or user deleted. Logout automatically.
-        handleLogout();
+        logout();
       } else {
         const errorMsg = e.response?.data?.message || e.response?.data?.error || e.message || 'Unknown error';
         Alert.alert('Error', `Could not load profile data: ${errorMsg}`);
@@ -61,9 +55,6 @@ export default function ProfileScreen({ navigation }: any) {
     }
   };
 
-  const handleLogout = async () => {
-    await logout();
-  };
 
   const handleDeleteAccount = async () => {
     Alert.alert(
@@ -78,7 +69,7 @@ export default function ProfileScreen({ navigation }: any) {
             try {
               setLoading(true);
               await api.delete('/auth/delete-account');
-              await handleLogout();
+              await logout();
               Alert.alert('Success', 'Your account has been deleted.');
             } catch (e: any) {
               Alert.alert('Error', e.response?.data?.error || 'Failed to delete account');
@@ -98,7 +89,7 @@ export default function ProfileScreen({ navigation }: any) {
     );
   }
 
-  if (!isAuthenticated) {
+  if (!isLoggedIn) {
     return (
       <SafeAreaView style={[styles.safeArea, { backgroundColor: colors.background }]}>
         <View style={styles.unauthContainer}>
@@ -127,7 +118,7 @@ export default function ProfileScreen({ navigation }: any) {
           <TouchableOpacity onPress={toggleTheme} style={styles.iconButton}>
             <Ionicons name={isDark ? 'sunny' : 'moon'} size={20} color={colors.text} />
           </TouchableOpacity>
-          <TouchableOpacity onPress={() => handleLogout()}>
+          <TouchableOpacity onPress={() => logout()}>
             <Text style={styles.logoutText}>Logout</Text>
           </TouchableOpacity>
         </View>

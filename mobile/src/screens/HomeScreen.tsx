@@ -1,46 +1,38 @@
 import React, { useEffect, useState } from 'react';
-import { View, Text, FlatList, TouchableOpacity, StyleSheet, Alert, Linking, SafeAreaView, ActivityIndicator, Image, TextInput } from 'react-native';
+import { View, Text, FlatList, TouchableOpacity, StyleSheet, Alert, Linking, ActivityIndicator, Image, TextInput } from 'react-native';
+import { SafeAreaView } from 'react-native-safe-area-context';
 import { Ionicons } from '@expo/vector-icons';
 import api from '../services/api';
 import * as SecureStore from 'expo-secure-store';
 import { useTheme } from '../context/ThemeContext';
+import { useAuth } from '../context/AuthContext';
 
 export default function HomeScreen({ navigation }: any) {
+  const { colors, toggleTheme, isDark } = useTheme();
+  
+  const { isLoggedIn, userRole, userId: currentUserId, logout: authLogout } = useAuth();
+
   const [notes, setNotes] = useState<any[]>([]);
   const [page, setPage] = useState(1);
-  const [isLogged, setIsLogged] = useState(false);
-  const [userRole, setUserRole] = useState<string | null>(null);
-  const [currentUserId, setCurrentUserId] = useState<string | null>(null);
   const [loading, setLoading] = useState(false);
   const [selectedSchool, setSelectedSchool] = useState('ALL');
   const [searchQuery, setSearchQuery] = useState('');
   const [favorites, setFavorites] = useState<string[]>([]);
-  const { colors, toggleTheme, isDark } = useTheme();
 
   const UNIVERSITIES = ['ALL', 'İTÜ', 'ODTÜ', 'BOĞAZİÇİ', 'HACETTEPE', 'YILDIZ TEKNİK', 'KOÇ UNIVERSITY', 'DOĞUŞ UNIVERSITY'];
 
   // When mounting or focusing, re-check tokens and fetch recent items
   useEffect(() => {
     const unsubscribe = navigation.addListener('focus', async () => {
-      await checkToken();
       setPage(1);
       fetchNotes(1, true, selectedSchool, searchQuery);
-      const token = await SecureStore.getItemAsync('accessToken');
-      if (token) {
+      if (isLoggedIn) {
         fetchFavorites();
       }
     });
     return unsubscribe;
-  }, [navigation]);
+  }, [navigation, isLoggedIn, selectedSchool, searchQuery]);
 
-  const checkToken = async () => {
-    const token = await SecureStore.getItemAsync('accessToken');
-    const role = await SecureStore.getItemAsync('userRole');
-    const uId = await SecureStore.getItemAsync('userId');
-    setIsLogged(!!token);
-    setUserRole(role);
-    setCurrentUserId(uId);
-  };
 
   const fetchFavorites = async () => {
     try {
@@ -102,7 +94,7 @@ export default function HomeScreen({ navigation }: any) {
   };
 
   const toggleFavorite = async (noteId: string) => {
-    if (!isLogged) return Alert.alert('Error', 'Must be logged in to favorite notes');
+    if (!isLoggedIn) return Alert.alert('Error', 'Must be logged in to favorite notes');
     try {
       const res = await api.post('/favorites/toggle', { noteId });
       if (res.data.favorited) {
@@ -134,7 +126,7 @@ export default function HomeScreen({ navigation }: any) {
   };
 
   const reportNote = async (noteId: string) => {
-    if (!isLogged) return Alert.alert('Error', 'Must be logged in to report');
+    if (!isLoggedIn) return Alert.alert('Error', 'Must be logged in to report');
     try {
       await api.post('/reports', { noteId, reason: 'Inappropriate content' });
       Alert.alert('Reported', 'Thank you for your report. Admins will review it.');
@@ -167,12 +159,7 @@ export default function HomeScreen({ navigation }: any) {
   };
 
   const logout = async () => {
-    await SecureStore.deleteItemAsync('accessToken');
-    await SecureStore.deleteItemAsync('userRole');
-    await SecureStore.deleteItemAsync('userId');
-    setIsLogged(false);
-    setUserRole(null);
-    setCurrentUserId(null);
+    await authLogout();
   };
 
   const renderItem = ({ item }: { item: any }) => (
@@ -210,7 +197,7 @@ export default function HomeScreen({ navigation }: any) {
             <Ionicons name="chatbubble-outline" size={20} color={colors.textSecondary} />
           </TouchableOpacity>
 
-          {isLogged && (
+          {isLoggedIn && (
             <View style={{ flexDirection: 'row', alignItems: 'center' }}>
               {item.userId === currentUserId && (
                 <TouchableOpacity 
@@ -244,7 +231,7 @@ export default function HomeScreen({ navigation }: any) {
           </TouchableOpacity>
           {/* Profile icon removed from header as per user request */}
 
-          {!isLogged ? (
+          {!isLoggedIn ? (
             <TouchableOpacity onPress={() => navigation.navigate('Auth')}>
               <Text style={styles.headerActionText}>Login</Text>
             </TouchableOpacity>
@@ -321,7 +308,7 @@ export default function HomeScreen({ navigation }: any) {
       />
 
       {/* Floating Action Button */}
-      {isLogged && (
+      {isLoggedIn && (
         <TouchableOpacity style={styles.fab} onPress={() => navigation.navigate('Upload')}>
           <Text style={styles.fabIcon}>+</Text>
         </TouchableOpacity>
