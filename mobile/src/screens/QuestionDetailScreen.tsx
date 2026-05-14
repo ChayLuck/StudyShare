@@ -1,5 +1,5 @@
 import React, { useState, useEffect, useCallback } from 'react';
-import { 
+import {
   View, Text, StyleSheet, FlatList, TouchableOpacity,
   Image, ActivityIndicator, ScrollView,
   Modal, TextInput, Alert, KeyboardAvoidingView, Platform, Linking
@@ -16,10 +16,10 @@ export default function QuestionDetailScreen({ route, navigation }: any) {
   const { questionId } = route.params;
   const { colors, isDark } = useTheme();
   const { userId: currentUserId } = useAuth();
-  
+
   const [question, setQuestion] = useState<any>(null);
   const [loading, setLoading] = useState(true);
-  
+
   // Answer Modal State
   const [showAnswerModal, setShowAnswerModal] = useState(false);
   const [answerContent, setAnswerContent] = useState('');
@@ -127,8 +127,8 @@ export default function QuestionDetailScreen({ route, navigation }: any) {
       'Are you sure you want to delete this question?',
       [
         { text: 'Cancel', style: 'cancel' },
-        { 
-          text: 'Delete', 
+        {
+          text: 'Delete',
           style: 'destructive',
           onPress: async () => {
             try {
@@ -149,8 +149,8 @@ export default function QuestionDetailScreen({ route, navigation }: any) {
       'Are you sure you want to delete this answer?',
       [
         { text: 'Cancel', style: 'cancel' },
-        { 
-          text: 'Delete', 
+        {
+          text: 'Delete',
           style: 'destructive',
           onPress: async () => {
             try {
@@ -169,7 +169,7 @@ export default function QuestionDetailScreen({ route, navigation }: any) {
     <View style={styles.questionSection}>
       <View style={styles.headerRow}>
         <View style={styles.userInfo}>
-           <View style={[styles.avatarSmall, { backgroundColor: colors.primary + '20' }]}>
+          <View style={[styles.avatarSmall, { backgroundColor: colors.primary + '20' }]}>
             <Text style={[styles.avatarTextSmall, { color: colors.primary }]}>
               {question.user.name ? question.user.name[0].toUpperCase() : 'U'}
             </Text>
@@ -188,16 +188,16 @@ export default function QuestionDetailScreen({ route, navigation }: any) {
       )}
 
       <Text style={[styles.mainContent, { color: colors.text }]}>{question.content}</Text>
-      
+
       {question.fileUrl && (
-        <TouchableOpacity 
+        <TouchableOpacity
           style={styles.attachmentContainer}
           onPress={() => Linking.openURL(question.fileUrl)}
         >
-          <Image 
-            source={{ uri: getThumbnailUrl(question.fileUrl) }} 
-            style={styles.attachmentImage} 
-            resizeMode="contain" 
+          <Image
+            source={{ uri: getThumbnailUrl(question.fileUrl) }}
+            style={styles.attachmentImage}
+            resizeMode="contain"
           />
         </TouchableOpacity>
       )}
@@ -209,22 +209,22 @@ export default function QuestionDetailScreen({ route, navigation }: any) {
 
   const renderAnswer = ({ item }: any) => {
     const isQuestionOwner = currentUserId === question.userId;
-    
+
     return (
       <View style={[styles.answerCard, { backgroundColor: colors.card }, item.isCorrect && { borderColor: '#10b981', borderLeftWidth: 4 }]}>
         <View style={styles.answerHeader}>
           <View style={styles.userInfo}>
-             <View style={[styles.avatarMini, { backgroundColor: colors.border }]}>
-               <Text style={[styles.avatarTextMini, { color: colors.text }]}>
-                 {item.user.name ? item.user.name[0].toUpperCase() : 'U'}
-               </Text>
-             </View>
-             <Text style={[styles.userNameSmall, { color: colors.text }]}>{item.user.name}</Text>
-             {item.userId === question.userId && (
-               <View style={[styles.ownerBadge, { backgroundColor: colors.primary + '20' }]}>
-                 <Text style={[styles.ownerBadgeText, { color: colors.primary }]}>OWNER</Text>
-               </View>
-             )}
+            <View style={[styles.avatarMini, { backgroundColor: colors.border }]}>
+              <Text style={[styles.avatarTextMini, { color: colors.text }]}>
+                {item.user.name ? item.user.name[0].toUpperCase() : 'U'}
+              </Text>
+            </View>
+            <Text style={[styles.userNameSmall, { color: colors.text }]}>{item.user.name}</Text>
+            {item.userId === question.userId && (
+              <View style={[styles.ownerBadge, { backgroundColor: colors.primary + '20' }]}>
+                <Text style={[styles.ownerBadgeText, { color: colors.primary }]}>OWNER</Text>
+              </View>
+            )}
           </View>
           {item.isCorrect && (
             <View style={styles.correctBadge}>
@@ -235,16 +235,16 @@ export default function QuestionDetailScreen({ route, navigation }: any) {
         </View>
 
         <Text style={[styles.answerText, { color: colors.text }]}>{item.content}</Text>
-        
+
         {item.fileUrl && (
-          <TouchableOpacity 
+          <TouchableOpacity
             style={styles.answerAttachment}
             onPress={() => Linking.openURL(item.fileUrl)}
           >
-            <Image 
-              source={{ uri: getThumbnailUrl(item.fileUrl) }} 
-              style={styles.answerImage} 
-              resizeMode="cover" 
+            <Image
+              source={{ uri: getThumbnailUrl(item.fileUrl) }}
+              style={styles.answerImage}
+              resizeMode="cover"
             />
             {item.fileType === 'pdf' && (
               <View style={styles.pdfBadgeOverlay}>
@@ -258,13 +258,13 @@ export default function QuestionDetailScreen({ route, navigation }: any) {
           <View style={styles.actionRow}>
             {isQuestionOwner && !item.isSpam && (
               <>
-                <TouchableOpacity 
+                <TouchableOpacity
                   style={[styles.actionBtn, { backgroundColor: item.isCorrect ? '#ef4444' : '#10b981' }]}
                   onPress={() => handleMarkCorrect(item.id)}
                 >
                   <Text style={styles.actionBtnText}>{item.isCorrect ? 'Unmark Correct' : 'Mark Correct'}</Text>
                 </TouchableOpacity>
-                <TouchableOpacity 
+                <TouchableOpacity
                   style={[styles.actionBtn, { backgroundColor: '#9ca3af' }]}
                   onPress={() => handleMarkSpam(item.id)}
                 >
@@ -272,7 +272,7 @@ export default function QuestionDetailScreen({ route, navigation }: any) {
                 </TouchableOpacity>
               </>
             )}
-            <TouchableOpacity 
+            <TouchableOpacity
               style={[styles.actionBtn, { backgroundColor: '#ef4444' }]}
               onPress={() => handleDeleteAnswer(item.id)}
             >
@@ -328,7 +328,7 @@ export default function QuestionDetailScreen({ route, navigation }: any) {
         }
       />
 
-      <TouchableOpacity 
+      <TouchableOpacity
         style={[styles.fab, { backgroundColor: colors.primary }]}
         onPress={() => setShowAnswerModal(true)}
       >
@@ -338,7 +338,11 @@ export default function QuestionDetailScreen({ route, navigation }: any) {
       {/* Answer Modal */}
       <Modal visible={showAnswerModal} animationType="slide" transparent>
         <View style={styles.modalOverlay}>
-          <KeyboardAvoidingView behavior={Platform.OS === 'ios' ? 'padding' : undefined} style={{ width: '100%' }}>
+          <KeyboardAvoidingView
+            behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
+            style={{ width: '100%' }}
+            keyboardVerticalOffset={Platform.OS === 'ios' ? 0 : 25}
+          >
             <View style={[styles.modalContent, { backgroundColor: colors.card }]}>
               <View style={styles.modalHeader}>
                 <Text style={[styles.modalTitle, { color: colors.text }]}>Your Answer</Text>
@@ -380,7 +384,7 @@ export default function QuestionDetailScreen({ route, navigation }: any) {
                 </View>
               )}
 
-              <TouchableOpacity 
+              <TouchableOpacity
                 style={[styles.submitButton, { backgroundColor: colors.primary }]}
                 onPress={handlePostAnswer}
                 disabled={submitting}
@@ -402,10 +406,10 @@ export default function QuestionDetailScreen({ route, navigation }: any) {
 const styles = StyleSheet.create({
   container: { flex: 1 },
   center: { flex: 1, justifyContent: 'center', alignItems: 'center' },
-  header: { 
-    flexDirection: 'row', 
-    justifyContent: 'space-between', 
-    alignItems: 'center', 
+  header: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
     padding: 15,
     borderBottomWidth: 1,
     borderBottomColor: '#f3f4f6'
@@ -451,12 +455,12 @@ const styles = StyleSheet.create({
   spamText: { color: '#ef4444', fontSize: 12, fontWeight: '600' },
   emptyContainer: { padding: 40, alignItems: 'center' },
   emptyText: { textAlign: 'center', fontSize: 15 },
-  fab: { 
-    position: 'absolute', 
-    bottom: 30, 
-    right: 30, 
-    paddingHorizontal: 25, 
-    paddingVertical: 15, 
+  fab: {
+    position: 'absolute',
+    bottom: 30,
+    right: 30,
+    paddingHorizontal: 25,
+    paddingVertical: 15,
     borderRadius: 30,
     shadowColor: '#000',
     shadowOffset: { width: 0, height: 4 },
@@ -466,7 +470,7 @@ const styles = StyleSheet.create({
   },
   fabText: { color: '#fff', fontWeight: 'bold', fontSize: 16 },
   modalOverlay: { flex: 1, backgroundColor: 'rgba(0,0,0,0.5)', justifyContent: 'flex-end' },
-  modalContent: { borderTopLeftRadius: 24, borderTopRightRadius: 24, padding: 20, minHeight: 400 },
+  modalContent: { borderTopLeftRadius: 24, borderTopRightRadius: 24, padding: 20, minHeight: 400, maxHeight: '90%' },
   modalHeader: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', marginBottom: 20 },
   modalTitle: { fontSize: 20, fontWeight: 'bold' },
   textArea: { borderRadius: 12, padding: 15, fontSize: 16, height: 150, textAlignVertical: 'top' },
@@ -477,14 +481,14 @@ const styles = StyleSheet.create({
   selectedFileText: { flex: 1, marginRight: 10 },
   submitButton: { paddingVertical: 16, borderRadius: 12, marginTop: 25, alignItems: 'center' },
   submitButtonText: { color: '#fff', fontSize: 18, fontWeight: 'bold' },
-  pdfBadgeOverlay: { 
-    position: 'absolute', 
-    bottom: 10, 
-    right: 10, 
-    backgroundColor: 'rgba(0,0,0,0.6)', 
-    paddingHorizontal: 10, 
-    paddingVertical: 5, 
-    borderRadius: 8 
+  pdfBadgeOverlay: {
+    position: 'absolute',
+    bottom: 10,
+    right: 10,
+    backgroundColor: 'rgba(0,0,0,0.6)',
+    paddingHorizontal: 10,
+    paddingVertical: 5,
+    borderRadius: 8
   },
   pdfBadgeText: { color: '#fff', fontSize: 11, fontWeight: 'bold' },
   deleteHeaderBtn: { padding: 5, width: 50, alignItems: 'center' }

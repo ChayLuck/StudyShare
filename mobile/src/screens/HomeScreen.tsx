@@ -9,7 +9,7 @@ import { useAuth } from '../context/AuthContext';
 
 export default function HomeScreen({ navigation }: any) {
   const { colors, toggleTheme, isDark } = useTheme();
-  
+
   const { isLoggedIn, userRole, userId: currentUserId, logout: authLogout } = useAuth();
 
   const [notes, setNotes] = useState<any[]>([]);
@@ -141,9 +141,9 @@ export default function HomeScreen({ navigation }: any) {
       "Are you sure you want to permanently delete this note?",
       [
         { text: "Cancel", style: "cancel" },
-        { 
-          text: "Delete", 
-          style: "destructive", 
+        {
+          text: "Delete",
+          style: "destructive",
           onPress: async () => {
             try {
               await api.delete(`/notes/${noteId}`);
@@ -163,7 +163,27 @@ export default function HomeScreen({ navigation }: any) {
   };
 
   const renderItem = ({ item }: { item: any }) => (
-    <View style={[styles.card, { backgroundColor: colors.card }]}>
+    <TouchableOpacity
+      style={[styles.card, { backgroundColor: colors.card }]}
+      onPress={() => viewFile(item.fileUrl)}
+      activeOpacity={0.8}
+    >
+
+      {/* Kullanıcı bilgisi ve tarih */}
+      <View style={styles.userRow}>
+        <View style={[styles.avatarMini, { backgroundColor: colors.primary + '20' }]}>
+          <Text style={[styles.avatarText, { color: colors.primary }]}>
+            {item.user?.name ? item.user.name[0].toUpperCase() : 'U'}
+          </Text>
+        </View>
+        <View>
+          <Text style={[styles.uploaderName, { color: colors.text }]}>{item.user?.name || 'Unknown'}</Text>
+          <Text style={[styles.uploadDate, { color: colors.textSecondary }]}>
+            {item.createdAt ? new Date(item.createdAt).toLocaleDateString('tr-TR') : ''}
+          </Text>
+        </View>
+      </View>
+
       <View style={styles.cardHeader}>
         <View style={[styles.chip, { backgroundColor: colors.chip }]}>
           <Text style={[styles.chipText, { color: colors.chipText }]}>{item.courseName}</Text>
@@ -200,8 +220,8 @@ export default function HomeScreen({ navigation }: any) {
           {isLoggedIn && (
             <View style={{ flexDirection: 'row', alignItems: 'center' }}>
               {item.userId === currentUserId && (
-                <TouchableOpacity 
-                  style={[styles.reportButton, { marginRight: 10 }]} 
+                <TouchableOpacity
+                  style={[styles.reportButton, { marginRight: 10 }]}
                   onPress={() => handleDeleteNote(item.id)}
                 >
                   <Ionicons name="trash" size={18} color="#ef4444" />
@@ -214,7 +234,7 @@ export default function HomeScreen({ navigation }: any) {
           )}
         </View>
       </View>
-    </View>
+    </TouchableOpacity>
   );
 
   return (
@@ -493,5 +513,30 @@ const styles = StyleSheet.create({
     fontSize: 32,
     fontWeight: '300',
     marginTop: -2
+  },
+  userRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    marginBottom: 12,
+  },
+  avatarMini: {
+    width: 32,
+    height: 32,
+    borderRadius: 16,
+    justifyContent: 'center',
+    alignItems: 'center',
+    marginRight: 10,
+  },
+  avatarText: {
+    fontWeight: 'bold',
+    fontSize: 14,
+  },
+  uploaderName: {
+    fontWeight: '600',
+    fontSize: 14,
+  },
+  uploadDate: {
+    fontSize: 12,
+    marginTop: 1,
   }
 });

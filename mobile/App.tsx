@@ -33,9 +33,9 @@ const Tab = createBottomTabNavigator();
 function TabNavigator() {
   const { colors } = useTheme();
   const insets = useSafeAreaInsets();
-  
+
   return (
-    <Tab.Navigator 
+    <Tab.Navigator
       screenOptions={({ route }) => ({
         tabBarIcon: ({ focused, color, size }) => {
           let iconName: IoniconName = 'help-circle';
@@ -43,7 +43,7 @@ function TabNavigator() {
           else if (route.name === 'Questions') iconName = 'help-circle';
           else if (route.name === 'Favorites') iconName = 'heart';
           else if (route.name === 'Profile') iconName = 'person';
-          
+
           return (
             <View style={{ alignItems: 'center', justifyContent: 'center' }}>
               <Ionicons name={iconName} size={size} color={focused ? colors.primary : color} />
@@ -52,7 +52,7 @@ function TabNavigator() {
         },
         tabBarActiveTintColor: colors.primary,
         tabBarInactiveTintColor: 'gray',
-        tabBarStyle: { 
+        tabBarStyle: {
           backgroundColor: colors.card,
           borderTopColor: colors.border,
           height: 60 + insets.bottom,

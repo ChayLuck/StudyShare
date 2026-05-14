@@ -1,11 +1,11 @@
 import React, { useEffect, useState } from 'react';
-import { 
-  View, 
+import {
+  View,
   Text,
   StyleSheet,
-  TouchableOpacity, 
-  ScrollView, 
-  Image, 
+  TouchableOpacity,
+  ScrollView,
+  Image,
   Alert,
   ActivityIndicator
 } from 'react-native';
@@ -62,8 +62,8 @@ export default function ProfileScreen({ navigation }: any) {
       'Are you sure you want to delete your account? This action is permanent and all your data will be lost.',
       [
         { text: 'Cancel', style: 'cancel' },
-        { 
-          text: 'Delete', 
+        {
+          text: 'Delete',
           style: 'destructive',
           onPress: async () => {
             try {
@@ -98,7 +98,7 @@ export default function ProfileScreen({ navigation }: any) {
           <Text style={[styles.unauthText, { color: colors.textSecondary }]}>
             Please log in or register to view and manage your profile.
           </Text>
-          <TouchableOpacity 
+          <TouchableOpacity
             style={[styles.loginButton, { backgroundColor: colors.primary }]}
             onPress={() => navigation.navigate('Auth')}
           >
@@ -142,7 +142,7 @@ export default function ProfileScreen({ navigation }: any) {
                 <Text style={[styles.uniChipText, { color: colors.primary }]}>{user?.university || 'NOT SPECIFIED'}</Text>
               </View>
             </View>
-            <TouchableOpacity 
+            <TouchableOpacity
               style={[styles.editButton, { borderColor: colors.border }]}
               onPress={() => navigation.navigate('EditProfile')}
             >
@@ -174,16 +174,12 @@ export default function ProfileScreen({ navigation }: any) {
         <View style={[styles.menuContainer, { backgroundColor: colors.card }]}>
           <MenuItem icon="help-circle" label="My Questions" color={colors.text} onPress={() => navigation.navigate('UserQuestions', { userId: user.id })} />
           <MenuItem icon="chatbubble" label="My Answers" color={colors.text} onPress={() => navigation.navigate('UserQuestions', { answeredByMe: true })} />
-          <MenuItem icon="heart" label="Liked Content" color={colors.text} onPress={() => navigation.navigate('Favorites')} />
-          <MenuItem icon="bookmark" label="Saved Items" color={colors.text} last onPress={() => {}} />
+          <MenuItem icon="heart" label="Liked Content" color={colors.text} last onPress={() => navigation.navigate('Favorites')} />
+
         </View>
 
-        {/* Account Settings Section */}
-        <Text style={[styles.sectionTitle, { color: colors.text }]}>Account Settings</Text>
-        <View style={[styles.menuContainer, { backgroundColor: colors.card }]}>
-          <MenuItem icon="person" label="Personal Information" color={colors.text} onPress={() => navigation.navigate('EditProfile')} />
-          <MenuItem icon="lock-closed" label="Password & Security" color={colors.text} last onPress={() => navigation.navigate('EditProfile')} />
-        </View>
+
+
 
         {/* Danger Zone */}
         <Text style={[styles.sectionTitle, { color: '#ef4444' }]}>Danger Zone</Text>
@@ -198,9 +194,9 @@ export default function ProfileScreen({ navigation }: any) {
 function MenuItem({ icon, label, color, last, onPress }: any) {
   const { colors } = useTheme();
   return (
-    <TouchableOpacity 
+    <TouchableOpacity
       style={[
-        styles.menuItem, 
+        styles.menuItem,
         !last && { borderBottomWidth: 1, borderBottomColor: colors.divider }
       ]}
       onPress={onPress}

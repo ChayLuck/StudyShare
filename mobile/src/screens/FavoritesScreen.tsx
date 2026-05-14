@@ -48,18 +48,18 @@ export default function FavoritesScreen({ navigation }: any) {
   const renderItem = ({ item }: { item: any }) => (
     <View style={[styles.card, { backgroundColor: colors.card }]}>
       <View style={styles.cardHeader}>
-         <View style={[styles.chip, { backgroundColor: colors.chip }]}>
-            <Text style={[styles.chipText, { color: colors.chipText }]}>{item.courseName}</Text>
-         </View>
-         <Text style={[styles.schoolText, { color: colors.text }]} numberOfLines={1}>{item.schoolName}</Text>
+        <View style={[styles.chip, { backgroundColor: colors.chip }]}>
+          <Text style={[styles.chipText, { color: colors.chipText }]}>{item.courseName}</Text>
+        </View>
+        <Text style={[styles.schoolText, { color: colors.text }]} numberOfLines={1}>{item.schoolName}</Text>
       </View>
 
       <Text style={[styles.descriptionText, { color: colors.textSecondary }]} numberOfLines={3}>
-         {item.description || "No description provided."}
+        {item.description || "No description provided."}
       </Text>
 
-      <Image 
-        source={{ uri: getThumbnailUrl(item.fileUrl) }} 
+      <Image
+        source={{ uri: getThumbnailUrl(item.fileUrl) }}
         style={styles.thumbnail}
         resizeMode="cover"
       />
@@ -68,7 +68,7 @@ export default function FavoritesScreen({ navigation }: any) {
 
       <View style={[styles.cardFooter, { justifyContent: 'space-between' }]}>
         <TouchableOpacity style={[styles.viewButton, { backgroundColor: colors.primary }]} onPress={() => viewFile(item.fileUrl)}>
-           <Text style={styles.viewButtonText}>View Material</Text>
+          <Text style={styles.viewButtonText}>View Material</Text>
         </TouchableOpacity>
 
         <TouchableOpacity onPress={() => navigation.navigate('NoteDetail', { note: item })} style={{ marginRight: 5 }}>
@@ -100,7 +100,7 @@ export default function FavoritesScreen({ navigation }: any) {
             </View>
           ) : null
         }
-        ListFooterComponent={loading ? <ActivityIndicator size="large" color="#4F46E5" style={{marginVertical: 20}} /> : null}
+        ListFooterComponent={loading ? <ActivityIndicator size="large" color="#4F46E5" style={{ marginVertical: 20 }} /> : null}
       />
     </SafeAreaView>
   );

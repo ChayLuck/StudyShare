@@ -82,7 +82,7 @@ export const getNotes = async (req: AuthRequest, res: Response): Promise<void> =
     const skip = (page - 1) * limit;
 
     const where: any = { isHidden: false };
-    
+
     // School filter from chips
     if (school && school !== 'ALL') {
       where.schoolName = school as string;
@@ -104,7 +104,7 @@ export const getNotes = async (req: AuthRequest, res: Response): Promise<void> =
       take: limit,
       orderBy: { createdAt: 'desc' },
       include: {
-        user: { select: { email: true } },
+        user: { select: { email: true, name: true } },
       }
     });
 

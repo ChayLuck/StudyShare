@@ -1,11 +1,11 @@
 import React, { useState, useEffect } from 'react';
-import { 
-  View, 
-  Text, 
-  StyleSheet, 
-  FlatList, 
-  TextInput, 
-  TouchableOpacity, 
+import {
+  View,
+  Text,
+  StyleSheet,
+  FlatList,
+  TextInput,
+  TouchableOpacity,
   Image,
   ActivityIndicator,
   KeyboardAvoidingView,
@@ -21,7 +21,7 @@ export default function NoteDetailScreen({ route, navigation }: any) {
   const { note } = route.params;
   const { colors, isDark } = useTheme();
   const { isLoggedIn: isLogged } = useAuth();
-  
+
   const [comments, setComments] = useState<any[]>([]);
   const [newComment, setNewComment] = useState('');
   const [loading, setLoading] = useState(true);
@@ -78,35 +78,38 @@ export default function NoteDetailScreen({ route, navigation }: any) {
   );
 
   return (
-    <SafeAreaView style={[styles.container, { backgroundColor: colors.background }]}>
-      {/* Header */}
-      <View style={[styles.header, { backgroundColor: colors.card, borderBottomColor: colors.border }]}>
-        <TouchableOpacity style={styles.backButton} onPress={() => navigation.goBack()}>
-          <Text style={[styles.headerTitle, { color: colors.text }]}>← Comments</Text>
-        </TouchableOpacity>
-      </View>
 
-      <FlatList
-        data={comments}
-        keyExtractor={item => item.id}
-        renderItem={renderComment}
-        contentContainerStyle={styles.listContainer}
-        ListEmptyComponent={
-          loading ? (
-            <ActivityIndicator size="large" color={colors.primary} style={{ marginTop: 20 }} />
-          ) : (
-            <View style={styles.emptyContainer}>
-              <Text style={{ fontSize: 40, marginBottom: 10 }}>💬</Text>
-              <Text style={[styles.emptyText, { color: colors.textSecondary }]}>No comments yet.</Text>
-              <Text style={[styles.emptyText, { color: colors.textSecondary }]}>Be the first to share your thoughts!</Text>
-            </View>
-          )
-        }
-      />
+    <KeyboardAvoidingView
+      style={{ flex: 1 }}
+      behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
+      keyboardVerticalOffset={Platform.OS === 'ios' ? 0 : 0}
+    >
+      <SafeAreaView style={[styles.container, { backgroundColor: colors.background }]}>
+        {/* Header */}
+        <View style={[styles.header, { backgroundColor: colors.card, borderBottomColor: colors.border }]}>
+          <TouchableOpacity style={styles.backButton} onPress={() => navigation.goBack()}>
+            <Text style={[styles.headerTitle, { color: colors.text }]}>← Comments</Text>
+          </TouchableOpacity>
+        </View>
 
-      <KeyboardAvoidingView 
-        behavior={Platform.OS === 'ios' ? 'padding' : undefined}
-      >
+        <FlatList
+          data={comments}
+          keyExtractor={item => item.id}
+          renderItem={renderComment}
+          contentContainerStyle={styles.listContainer}
+          ListEmptyComponent={
+            loading ? (
+              <ActivityIndicator size="large" color={colors.primary} style={{ marginTop: 20 }} />
+            ) : (
+              <View style={styles.emptyContainer}>
+                <Text style={{ fontSize: 40, marginBottom: 10 }}>💬</Text>
+                <Text style={[styles.emptyText, { color: colors.textSecondary }]}>No comments yet.</Text>
+                <Text style={[styles.emptyText, { color: colors.textSecondary }]}>Be the first to share your thoughts!</Text>
+              </View>
+            )
+          }
+        />
+
         <View style={[styles.inputContainer, { backgroundColor: colors.card, borderTopColor: colors.border }]}>
           <TextInput
             style={[styles.input, { backgroundColor: colors.background, color: colors.text, borderColor: colors.border }]}
@@ -117,7 +120,7 @@ export default function NoteDetailScreen({ route, navigation }: any) {
             editable={isLogged}
             multiline
           />
-          <TouchableOpacity 
+          <TouchableOpacity
             style={[styles.sendButton, { backgroundColor: colors.primary }, (!isLogged || submitting || !newComment.trim()) && { opacity: 0.5 }]}
             onPress={handleAddComment}
             disabled={!isLogged || submitting || !newComment.trim()}
@@ -125,8 +128,8 @@ export default function NoteDetailScreen({ route, navigation }: any) {
             <Text style={styles.sendButtonText}>Send</Text>
           </TouchableOpacity>
         </View>
-      </KeyboardAvoidingView>
-    </SafeAreaView>
+      </SafeAreaView>
+    </KeyboardAvoidingView>
   );
 }
 
