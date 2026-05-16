@@ -170,9 +170,13 @@ export default function QuestionDetailScreen({ route, navigation }: any) {
       <View style={styles.headerRow}>
         <View style={styles.userInfo}>
           <View style={[styles.avatarSmall, { backgroundColor: colors.primary + '20' }]}>
-            <Text style={[styles.avatarTextSmall, { color: colors.primary }]}>
-              {question.user.name ? question.user.name[0].toUpperCase() : 'U'}
-            </Text>
+            {question.user?.avatarUrl ? (
+              <Image source={{ uri: question.user.avatarUrl }} style={{ width: 32, height: 32, borderRadius: 16 }} />
+            ) : (
+              <Text style={[styles.avatarTextSmall, { color: colors.primary }]}>
+                {question.user?.name ? question.user.name[0].toUpperCase() : 'U'}
+              </Text>
+            )}
           </View>
           <Text style={[styles.userName, { color: colors.text }]}>{question.user.name}</Text>
         </View>
@@ -215,9 +219,13 @@ export default function QuestionDetailScreen({ route, navigation }: any) {
         <View style={styles.answerHeader}>
           <View style={styles.userInfo}>
             <View style={[styles.avatarMini, { backgroundColor: colors.border }]}>
-              <Text style={[styles.avatarTextMini, { color: colors.text }]}>
-                {item.user.name ? item.user.name[0].toUpperCase() : 'U'}
-              </Text>
+              {item.user?.avatarUrl ? (
+                <Image source={{ uri: item.user.avatarUrl }} style={{ width: 24, height: 24, borderRadius: 12 }} />
+              ) : (
+                <Text style={[styles.avatarTextMini, { color: colors.text }]}>
+                  {item.user?.name ? item.user.name[0].toUpperCase() : 'U'}
+                </Text>
+              )}
             </View>
             <Text style={[styles.userNameSmall, { color: colors.text }]}>{item.user.name}</Text>
             {item.userId === question.userId && (

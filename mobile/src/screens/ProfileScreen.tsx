@@ -112,7 +112,7 @@ export default function ProfileScreen({ navigation }: any) {
   return (
     <SafeAreaView style={[styles.safeArea, { backgroundColor: colors.background }]}>
       {/* Header */}
-      <View style={[styles.header, { backgroundColor: colors.card, borderBottomColor: colors.border }]}>
+      <View style={styles.header}>
         <Text style={[styles.headerTitle, { color: colors.text }]}>StudyShare</Text>
         <View style={styles.headerLinks}>
           <TouchableOpacity onPress={toggleTheme} style={styles.iconButton}>
@@ -124,6 +124,7 @@ export default function ProfileScreen({ navigation }: any) {
         </View>
       </View>
 
+      <View style={{ flex: 1, backgroundColor: colors.background }}>
       <ScrollView contentContainerStyle={styles.scrollContent}>
         {/* Profile Card */}
         <View style={[styles.profileCard, { backgroundColor: colors.card }]}>
@@ -173,9 +174,7 @@ export default function ProfileScreen({ navigation }: any) {
         <Text style={[styles.sectionTitle, { color: colors.text }]}>My Activity</Text>
         <View style={[styles.menuContainer, { backgroundColor: colors.card }]}>
           <MenuItem icon="help-circle" label="My Questions" color={colors.text} onPress={() => navigation.navigate('UserQuestions', { userId: user.id })} />
-          <MenuItem icon="chatbubble" label="My Answers" color={colors.text} onPress={() => navigation.navigate('UserQuestions', { answeredByMe: true })} />
-          <MenuItem icon="heart" label="Liked Content" color={colors.text} last onPress={() => navigation.navigate('Favorites')} />
-
+          <MenuItem icon="chatbubble" label="My Answers" color={colors.text} last onPress={() => navigation.navigate('UserQuestions', { answeredByMe: true })} />
         </View>
 
 
@@ -187,6 +186,7 @@ export default function ProfileScreen({ navigation }: any) {
           <MenuItem icon="trash" label="Delete Account" color="#ef4444" last onPress={handleDeleteAccount} />
         </View>
       </ScrollView>
+      </View>
     </SafeAreaView>
   );
 }
@@ -226,13 +226,11 @@ const styles = StyleSheet.create({
     justifyContent: 'space-between',
     alignItems: 'center',
     paddingHorizontal: 20,
-    paddingVertical: 15,
-    borderBottomWidth: 1,
+    paddingVertical: 20,
   },
   headerTitle: {
-    fontSize: 22,
-    fontWeight: '900',
-    letterSpacing: -0.5
+    fontSize: 24,
+    fontWeight: '800',
   },
   headerLinks: {
     flexDirection: 'row',

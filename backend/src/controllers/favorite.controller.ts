@@ -66,7 +66,7 @@ export const getFavorites = async (req: AuthRequest, res: Response): Promise<voi
       include: {
         note: {
           include: {
-            user: { select: { email: true } }
+            user: { select: { email: true, name: true, avatarUrl: true } }
           }
         }
       },

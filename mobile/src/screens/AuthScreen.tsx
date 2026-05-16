@@ -47,6 +47,7 @@ const AnimatedBlob = ({ color, size, startPos, duration }: any) => {
 export default function AuthScreen({ navigation }: any) {
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
+  const [name, setName] = useState('');
   const [isLogin, setIsLogin] = useState(true);
   const { colors, isDark } = useTheme();
   const { login } = useAuth();
@@ -74,7 +75,7 @@ export default function AuthScreen({ navigation }: any) {
            throw new Error('User data missing');
         }
       } else {
-        await api.post('/auth/register', { email, password });
+        await api.post('/auth/register', { email, password, name });
         Alert.alert('Success', 'Registered! Check your email to verify.');
         setIsLogin(true);
       }
@@ -111,6 +112,16 @@ export default function AuthScreen({ navigation }: any) {
           </Text>
 
           <View style={styles.inputContainer}>
+            {!isLogin && (
+              <TextInput
+                style={[styles.input, { backgroundColor: isDark ? '#374151' : '#f3f4f6', borderColor: colors.border, color: colors.text }]}
+                placeholder="Full Name"
+                placeholderTextColor={colors.textSecondary}
+                value={name}
+                onChangeText={setName}
+                autoCapitalize="words"
+              />
+            )}
             <TextInput
               style={[styles.input, { backgroundColor: isDark ? '#374151' : '#f3f4f6', borderColor: colors.border, color: colors.text }]}
               placeholder="Email address"

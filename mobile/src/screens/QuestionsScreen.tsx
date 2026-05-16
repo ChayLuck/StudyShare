@@ -169,14 +169,18 @@ export default function QuestionsScreen({ route, navigation }: any) {
       <View style={styles.cardHeader}>
         <View style={styles.userInfo}>
           <View style={[styles.avatarPlaceholder, { backgroundColor: colors.primary + '20' }]}>
-            <Text style={[styles.avatarText, { color: colors.primary }]}>
-              {item.user.name ? item.user.name[0].toUpperCase() : 'U'}
-            </Text>
+            {item.user?.avatarUrl ? (
+              <Image source={{ uri: item.user.avatarUrl }} style={{ width: 40, height: 40, borderRadius: 20 }} />
+            ) : (
+              <Text style={[styles.avatarText, { color: colors.primary }]}>
+                {item.user?.name ? item.user.name[0].toUpperCase() : 'U'}
+              </Text>
+            )}
           </View>
           <View>
             <Text style={[styles.userName, { color: colors.text }]}>{item.user.name || 'Anonymous'}</Text>
             <Text style={[styles.timeText, { color: colors.textSecondary }]}>
-              {new Date(item.createdAt).toLocaleDateString()}
+              {new Date(item.createdAt).toLocaleDateString('tr-TR')}
             </Text>
           </View>
         </View>

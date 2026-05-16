@@ -1,6 +1,7 @@
 import React, { useEffect, useState } from 'react';
 import { View, Text, FlatList, TouchableOpacity, StyleSheet, ActivityIndicator, Image, Linking, Alert } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
+import { Ionicons } from '@expo/vector-icons';
 import api from '../services/api';
 import { useTheme } from '../context/ThemeContext';
 
@@ -46,7 +47,32 @@ export default function FavoritesScreen({ navigation }: any) {
   };
 
   const renderItem = ({ item }: { item: any }) => (
-    <View style={[styles.card, { backgroundColor: colors.card }]}>
+    <TouchableOpacity 
+      style={[styles.card, { backgroundColor: colors.card }]}
+      onPress={() => viewFile(item.fileUrl)}
+      activeOpacity={0.8}
+    >
+      {/* Kullanıcı bilgisi ve tarih */}
+      <View style={styles.userRow}>
+        <View style={{ flexDirection: 'row', alignItems: 'center' }}>
+          <View style={[styles.avatarMini, { backgroundColor: colors.primary + '20' }]}>
+            {item.user?.avatarUrl ? (
+              <Image source={{ uri: item.user.avatarUrl }} style={{ width: 32, height: 32, borderRadius: 16 }} />
+            ) : (
+              <Text style={[styles.avatarText, { color: colors.primary }]}>
+                {item.user?.name ? item.user.name[0].toUpperCase() : 'U'}
+              </Text>
+            )}
+          </View>
+          <View>
+            <Text style={[styles.uploaderName, { color: colors.text }]}>{item.user?.name || 'Unknown'}</Text>
+            <Text style={[styles.uploadDate, { color: colors.textSecondary }]}>
+              {item.createdAt ? new Date(item.createdAt).toLocaleDateString('tr-TR') : ''}
+            </Text>
+          </View>
+        </View>
+      </View>
+
       <View style={styles.cardHeader}>
         <View style={[styles.chip, { backgroundColor: colors.chip }]}>
           <Text style={[styles.chipText, { color: colors.chipText }]}>{item.courseName}</Text>
@@ -72,15 +98,15 @@ export default function FavoritesScreen({ navigation }: any) {
         </TouchableOpacity>
 
         <TouchableOpacity onPress={() => navigation.navigate('NoteDetail', { note: item })} style={{ marginRight: 5 }}>
-          <Text style={{ fontSize: 22 }}>💬</Text>
+          <Ionicons name="chatbubble-outline" size={20} color={colors.textSecondary} />
         </TouchableOpacity>
       </View>
-    </View>
+    </TouchableOpacity>
   );
 
   return (
     <SafeAreaView style={[styles.safeArea, { backgroundColor: colors.background }]}>
-      <View style={[styles.header, { backgroundColor: colors.card, borderBottomColor: colors.border }]}>
+      <View style={styles.header}>
         <TouchableOpacity onPress={() => navigation.goBack()} style={styles.backButton}>
           <Text style={[styles.backIcon, { color: colors.text }]}>←</Text>
         </TouchableOpacity>
@@ -88,20 +114,22 @@ export default function FavoritesScreen({ navigation }: any) {
         <View style={{ width: 40 }} />
       </View>
 
-      <FlatList
-        data={notes}
-        keyExtractor={item => item.id}
-        renderItem={renderItem}
-        contentContainerStyle={styles.listContainer}
-        ListEmptyComponent={
-          !loading ? (
-            <View style={styles.emptyContainer}>
-              <Text style={[styles.emptyText, { color: colors.textSecondary }]}>No favorites yet. Go explore some notes!</Text>
-            </View>
-          ) : null
-        }
-        ListFooterComponent={loading ? <ActivityIndicator size="large" color="#4F46E5" style={{ marginVertical: 20 }} /> : null}
-      />
+      <View style={{ flex: 1, backgroundColor: colors.background }}>
+        <FlatList
+          data={notes}
+          keyExtractor={item => item.id}
+          renderItem={renderItem}
+          contentContainerStyle={styles.listContainer}
+          ListEmptyComponent={
+            !loading ? (
+              <View style={styles.emptyContainer}>
+                <Text style={[styles.emptyText, { color: colors.textSecondary }]}>No favorites yet. Go explore some notes!</Text>
+              </View>
+            ) : null
+          }
+          ListFooterComponent={loading ? <ActivityIndicator size="large" color="#4F46E5" style={{ marginVertical: 20 }} /> : null}
+        />
+      </View>
     </SafeAreaView>
   );
 }
@@ -113,10 +141,9 @@ const styles = StyleSheet.create({
     justifyContent: 'space-between',
     alignItems: 'center',
     paddingHorizontal: 20,
-    paddingVertical: 15,
-    borderBottomWidth: 1,
+    paddingVertical: 20,
   },
-  headerTitle: { fontSize: 20, fontWeight: '900' },
+  headerTitle: { fontSize: 24, fontWeight: '800' },
   backButton: { width: 40 },
   backIcon: { fontSize: 24, fontWeight: 'bold' },
   listContainer: { padding: 15 },
@@ -133,4 +160,30 @@ const styles = StyleSheet.create({
   cardFooter: { flexDirection: 'row', justifyContent: 'center', alignItems: 'center' },
   viewButton: { paddingHorizontal: 20, paddingVertical: 10, borderRadius: 8 },
   viewButtonText: { color: '#fff', fontSize: 14, fontWeight: 'bold' },
+  userRow: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+    marginBottom: 12,
+  },
+  avatarMini: {
+    width: 32,
+    height: 32,
+    borderRadius: 16,
+    justifyContent: 'center',
+    alignItems: 'center',
+    marginRight: 10,
+  },
+  avatarText: {
+    fontWeight: 'bold',
+    fontSize: 14,
+  },
+  uploaderName: {
+    fontWeight: '600',
+    fontSize: 14,
+  },
+  uploadDate: {
+    fontSize: 12,
+    marginTop: 1,
+  }
 });

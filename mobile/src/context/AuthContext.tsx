@@ -31,7 +31,14 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       }
     }, 5000); // 5 second timeout
 
-    checkLoginStatus();
+    // checkLoginStatus();
+    
+    // For testing: force logout on every fresh start to see Login screen
+    const forceLogin = async () => {
+      await logout();
+      setIsLoading(false);
+    };
+    forceLogin();
 
     return () => clearTimeout(timeoutId);
   }, []);

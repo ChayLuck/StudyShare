@@ -11,9 +11,11 @@ import {
 import { SafeAreaView } from 'react-native-safe-area-context';
 import api from '../services/api';
 import { useTheme } from '../context/ThemeContext';
+import { useAuth } from '../context/AuthContext';
 
 export default function LeaderboardScreen({ navigation }: any) {
   const { colors } = useTheme();
+  const { userId: currentUserId } = useAuth();
   const [users, setUsers] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
 
@@ -48,7 +50,11 @@ export default function LeaderboardScreen({ navigation }: any) {
     }
 
     return (
-      <View style={[styles.card, { backgroundColor: colors.card, borderBottomColor: colors.border }]}>
+      <View style={[
+        styles.card, 
+        { backgroundColor: colors.card, borderBottomColor: colors.border },
+        item.id === currentUserId && { borderColor: colors.primary, borderWidth: 2, backgroundColor: colors.primary + '05' }
+      ]}>
         <View style={positionStyle}>
           <Text style={positionTextStyle}>{index + 1}</Text>
         </View>
@@ -62,8 +68,9 @@ export default function LeaderboardScreen({ navigation }: any) {
         )}
 
         <View style={styles.info}>
-          <Text style={[styles.name, { color: colors.text }]} numberOfLines={1}>
+          <Text style={[styles.name, { color: colors.text }, item.id === currentUserId && { color: colors.primary }]} numberOfLines={1}>
             {item.name || 'Anonymous User'}
+            {item.id === currentUserId && " (You)"}
           </Text>
           {item.university && (
             <Text style={[styles.university, { color: colors.textSecondary }]} numberOfLines={1}>
@@ -90,13 +97,15 @@ export default function LeaderboardScreen({ navigation }: any) {
 
   return (
     <SafeAreaView style={[styles.container, { backgroundColor: colors.background }]}>
-      <View style={[styles.header, { backgroundColor: colors.card, borderBottomColor: colors.border }]}>
-        <TouchableOpacity style={{ padding: 10 }} onPress={() => navigation.goBack()}>
-          <Text style={[styles.headerTitle, { color: colors.text }]}>← Leaderboard</Text>
+      <View style={styles.header}>
+        <TouchableOpacity style={{ flexDirection: 'row', alignItems: 'center' }} onPress={() => navigation.goBack()}>
+          <Text style={{ fontSize: 24, color: colors.text, marginRight: 10 }}>←</Text>
+          <Text style={[styles.headerTitle, { color: colors.text }]}>Leaderboard</Text>
         </TouchableOpacity>
       </View>
 
-      <View style={[styles.banner, { backgroundColor: colors.primary }]}>
+      <View style={{ flex: 1, backgroundColor: colors.background }}>
+        <View style={[styles.banner, { backgroundColor: colors.primary }]}>
         <Text style={styles.bannerEmoji}>🏆</Text>
         <Text style={styles.bannerTitle}>Top Students</Text>
         <Text style={styles.bannerSub}>Earn points by uploading notes and getting favorites!</Text>
@@ -109,6 +118,7 @@ export default function LeaderboardScreen({ navigation }: any) {
         contentContainerStyle={styles.list}
         showsVerticalScrollIndicator={false}
       />
+      </View>
     </SafeAreaView>
   );
 }
@@ -117,11 +127,12 @@ const styles = StyleSheet.create({
   container: { flex: 1 },
   center: { flex: 1, justifyContent: 'center', alignItems: 'center' },
   header: {
-    paddingHorizontal: 15,
-    paddingVertical: 15,
-    borderBottomWidth: 1,
+    flexDirection: 'row',
+    alignItems: 'center',
+    paddingHorizontal: 20,
+    paddingVertical: 20,
   },
-  headerTitle: { fontSize: 20, fontWeight: 'bold' },
+  headerTitle: { fontSize: 24, fontWeight: '800' },
   banner: {
     padding: 24,
     alignItems: 'center',

@@ -36,6 +36,12 @@ export const createAnswer = async (req: any, res: Response): Promise<void> => {
       }
     });
 
+    // Update user points (+5 for answering a question)
+    await prisma.user.update({
+      where: { id: userId },
+      data: { points: { increment: 5 } }
+    });
+
     res.status(201).json({ answer });
   } catch (error: any) {
     console.error('Create Answer Error:', error);
@@ -66,6 +72,14 @@ export const markAsCorrect = async (req: any, res: Response): Promise<void> => {
     if (answer.question.userId !== userId) {
       res.status(403).json({ error: 'Only the question owner can mark as correct' });
       return;
+    }
+
+    if (!answer.isCorrect) {
+      // If we are marking this as correct, unmark all other answers for this question
+      await prisma.answer.updateMany({
+        where: { questionId: answer.questionId, isCorrect: true },
+        data: { isCorrect: false }
+      });
     }
 
     // Toggle isCorrect
@@ -159,6 +173,12 @@ export const deleteAnswer = async (req: any, res: Response): Promise<void> => {
     }
 
     await prisma.answer.delete({ where: { id } });
+    
+    // Decrement user points (-5 for deleted answer)
+    await prisma.user.update({
+      where: { id: answer.userId },
+      data: { points: { decrement: 5 } }
+    });
     
     // Update question resolved status after deletion
     const correctAnswersCount = await prisma.answer.count({

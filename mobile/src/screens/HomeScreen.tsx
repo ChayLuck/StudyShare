@@ -18,6 +18,7 @@ export default function HomeScreen({ navigation }: any) {
   const [selectedSchool, setSelectedSchool] = useState('ALL');
   const [searchQuery, setSearchQuery] = useState('');
   const [favorites, setFavorites] = useState<string[]>([]);
+  const [activeMenuId, setActiveMenuId] = useState<string | null>(null);
 
   const UNIVERSITIES = ['ALL', 'İTÜ', 'ODTÜ', 'BOĞAZİÇİ', 'HACETTEPE', 'YILDIZ TEKNİK', 'KOÇ UNIVERSITY', 'DOĞUŞ UNIVERSITY'];
 
@@ -168,20 +169,64 @@ export default function HomeScreen({ navigation }: any) {
       onPress={() => viewFile(item.fileUrl)}
       activeOpacity={0.8}
     >
+      {isLoggedIn && (
+        <View style={{ position: 'absolute', top: 12, right: 12, zIndex: 10 }}>
+          <TouchableOpacity 
+            onPress={() => setActiveMenuId(activeMenuId === item.id ? null : item.id)}
+            style={{ padding: 5 }}
+          >
+            <Ionicons name="ellipsis-horizontal" size={20} color={colors.textSecondary} />
+          </TouchableOpacity>
+
+          {activeMenuId === item.id && (
+            <View style={[styles.dropdownMenu, { backgroundColor: colors.card, borderColor: colors.border }]}>
+              {item.userId === currentUserId && (
+                <TouchableOpacity 
+                  style={styles.dropdownItem} 
+                  onPress={() => {
+                    setActiveMenuId(null);
+                    handleDeleteNote(item.id);
+                  }}
+                >
+                  <Ionicons name="trash-outline" size={16} color="#ef4444" style={{ marginRight: 8 }} />
+                  <Text style={{ color: '#ef4444', fontSize: 14 }}>Delete</Text>
+                </TouchableOpacity>
+              )}
+              <TouchableOpacity 
+                style={styles.dropdownItem} 
+                onPress={() => {
+                  setActiveMenuId(null);
+                  reportNote(item.id);
+                }}
+              >
+                <Ionicons name="warning-outline" size={16} color="#ef4444" style={{ marginRight: 8 }} />
+                <Text style={{ color: '#ef4444', fontSize: 14 }}>Report Spam</Text>
+              </TouchableOpacity>
+            </View>
+          )}
+        </View>
+      )}
 
       {/* Kullanıcı bilgisi ve tarih */}
       <View style={styles.userRow}>
-        <View style={[styles.avatarMini, { backgroundColor: colors.primary + '20' }]}>
-          <Text style={[styles.avatarText, { color: colors.primary }]}>
-            {item.user?.name ? item.user.name[0].toUpperCase() : 'U'}
-          </Text>
+        <View style={{ flexDirection: 'row', alignItems: 'center' }}>
+          <View style={[styles.avatarMini, { backgroundColor: colors.primary + '20' }]}>
+            {item.user?.avatarUrl ? (
+              <Image source={{ uri: item.user.avatarUrl }} style={{ width: 32, height: 32, borderRadius: 16 }} />
+            ) : (
+              <Text style={[styles.avatarText, { color: colors.primary }]}>
+                {item.user?.name ? item.user.name[0].toUpperCase() : 'U'}
+              </Text>
+            )}
+          </View>
+          <View>
+            <Text style={[styles.uploaderName, { color: colors.text }]}>{item.user?.name || 'Unknown'}</Text>
+            <Text style={[styles.uploadDate, { color: colors.textSecondary }]}>
+              {item.createdAt ? new Date(item.createdAt).toLocaleDateString('tr-TR') : ''}
+            </Text>
+          </View>
         </View>
-        <View>
-          <Text style={[styles.uploaderName, { color: colors.text }]}>{item.user?.name || 'Unknown'}</Text>
-          <Text style={[styles.uploadDate, { color: colors.textSecondary }]}>
-            {item.createdAt ? new Date(item.createdAt).toLocaleDateString('tr-TR') : ''}
-          </Text>
-        </View>
+
       </View>
 
       <View style={styles.cardHeader}>
@@ -216,22 +261,6 @@ export default function HomeScreen({ navigation }: any) {
           <TouchableOpacity onPress={() => navigation.navigate('NoteDetail', { note: item })} style={{ marginRight: 10 }}>
             <Ionicons name="chatbubble-outline" size={20} color={colors.textSecondary} />
           </TouchableOpacity>
-
-          {isLoggedIn && (
-            <View style={{ flexDirection: 'row', alignItems: 'center' }}>
-              {item.userId === currentUserId && (
-                <TouchableOpacity
-                  style={[styles.reportButton, { marginRight: 10 }]}
-                  onPress={() => handleDeleteNote(item.id)}
-                >
-                  <Ionicons name="trash" size={18} color="#ef4444" />
-                </TouchableOpacity>
-              )}
-              <TouchableOpacity style={styles.reportButton} onPress={() => reportNote(item.id)}>
-                <Ionicons name="warning" size={18} color="#ef4444" />
-              </TouchableOpacity>
-            </View>
-          )}
         </View>
       </View>
     </TouchableOpacity>
@@ -240,7 +269,7 @@ export default function HomeScreen({ navigation }: any) {
   return (
     <SafeAreaView style={[styles.safeArea, { backgroundColor: colors.background }]}>
       {/* Custom Header */}
-      <View style={[styles.header, { backgroundColor: colors.card, borderBottomColor: colors.border }]}>
+      <View style={styles.header}>
         <Text style={[styles.headerTitle, { color: colors.text }]}>StudyShare</Text>
         <View style={styles.headerLinks}>
           <TouchableOpacity onPress={toggleTheme} style={{ marginRight: 10 }}>
@@ -269,10 +298,10 @@ export default function HomeScreen({ navigation }: any) {
           )}
         </View>
       </View>
-
+      <View style={{ flex: 1, backgroundColor: colors.background }}>
       {/* Search Bar */}
-      <View style={[styles.searchContainer, { backgroundColor: colors.card, borderBottomColor: colors.border }]}>
-        <View style={[styles.searchWrapper, { backgroundColor: colors.background, borderColor: colors.border }]}>
+      <View style={styles.searchContainer}>
+        <View style={[styles.searchWrapper, { backgroundColor: colors.card, borderColor: colors.border }]}>
           <Ionicons name="search" size={20} color={colors.text} />
           <TextInput
             style={[styles.searchInput, { color: colors.text }]}
@@ -290,7 +319,7 @@ export default function HomeScreen({ navigation }: any) {
       </View>
 
       {/* University Filter Bar */}
-      <View style={{ backgroundColor: colors.card }}>
+      <View style={{ marginBottom: 15 }}>
         <FlatList
           horizontal
           showsHorizontalScrollIndicator={false}
@@ -333,6 +362,7 @@ export default function HomeScreen({ navigation }: any) {
           <Text style={styles.fabIcon}>+</Text>
         </TouchableOpacity>
       )}
+      </View>
     </SafeAreaView>
   );
 }
@@ -347,21 +377,11 @@ const styles = StyleSheet.create({
     justifyContent: 'space-between',
     alignItems: 'center',
     paddingHorizontal: 20,
-    paddingVertical: 15,
-    backgroundColor: '#fff',
-    borderBottomWidth: 1,
-    borderBottomColor: '#f3f4f6',
-    elevation: 2,
-    shadowColor: '#000',
-    shadowOffset: { width: 0, height: 2 },
-    shadowOpacity: 0.05,
-    shadowRadius: 3
+    paddingVertical: 20,
   },
   headerTitle: {
-    fontSize: 22,
-    fontWeight: '900',
-    color: '#1f2937',
-    letterSpacing: -0.5
+    fontSize: 24,
+    fontWeight: '800',
   },
   headerLinks: {
     flexDirection: 'row',
@@ -373,15 +393,14 @@ const styles = StyleSheet.create({
     color: '#6b7280'
   },
   searchContainer: {
-    paddingHorizontal: 15,
-    paddingVertical: 10,
-    borderBottomWidth: 1,
+    paddingHorizontal: 20,
+    marginBottom: 15,
   },
   searchWrapper: {
     flexDirection: 'row',
     alignItems: 'center',
     borderWidth: 1,
-    borderRadius: 10,
+    borderRadius: 12,
     paddingHorizontal: 10,
     height: 45,
   },
@@ -399,9 +418,8 @@ const styles = StyleSheet.create({
     paddingBottom: 100 // space for FAB
   },
   filterContainer: {
-    paddingHorizontal: 15,
-    paddingVertical: 12,
-    gap: 8
+    paddingHorizontal: 20,
+    gap: 10
   },
   filterChip: {
     paddingHorizontal: 14,
@@ -538,5 +556,26 @@ const styles = StyleSheet.create({
   uploadDate: {
     fontSize: 12,
     marginTop: 1,
+  },
+  dropdownMenu: {
+    position: 'absolute',
+    top: 25,
+    right: 0,
+    borderWidth: 1,
+    borderRadius: 8,
+    paddingVertical: 5,
+    minWidth: 120,
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.1,
+    shadowRadius: 4,
+    elevation: 5,
+    zIndex: 999,
+  },
+  dropdownItem: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    paddingVertical: 8,
+    paddingHorizontal: 12,
   }
 });
