@@ -78,58 +78,59 @@ export default function NoteDetailScreen({ route, navigation }: any) {
   );
 
   return (
+    <View style={{ flex: 1, backgroundColor: colors.background }}>
+      <KeyboardAvoidingView
+        style={{ flex: 1 }}
+        behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
+        keyboardVerticalOffset={Platform.OS === 'ios' ? 0 : 0}
+      >
+        <SafeAreaView style={[styles.container, { backgroundColor: colors.background }]}>
+          {/* Header */}
+          <View style={[styles.header, { backgroundColor: colors.card, borderBottomColor: colors.border }]}>
+            <TouchableOpacity style={styles.backButton} onPress={() => navigation.goBack()}>
+              <Text style={[styles.headerTitle, { color: colors.text }]}>← Comments</Text>
+            </TouchableOpacity>
+          </View>
 
-    <KeyboardAvoidingView
-      style={{ flex: 1 }}
-      behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
-      keyboardVerticalOffset={Platform.OS === 'ios' ? 0 : 0}
-    >
-      <SafeAreaView style={[styles.container, { backgroundColor: colors.background }]}>
-        {/* Header */}
-        <View style={[styles.header, { backgroundColor: colors.card, borderBottomColor: colors.border }]}>
-          <TouchableOpacity style={styles.backButton} onPress={() => navigation.goBack()}>
-            <Text style={[styles.headerTitle, { color: colors.text }]}>← Comments</Text>
-          </TouchableOpacity>
-        </View>
-
-        <FlatList
-          data={comments}
-          keyExtractor={item => item.id}
-          renderItem={renderComment}
-          contentContainerStyle={styles.listContainer}
-          ListEmptyComponent={
-            loading ? (
-              <ActivityIndicator size="large" color={colors.primary} style={{ marginTop: 20 }} />
-            ) : (
-              <View style={styles.emptyContainer}>
-                <Text style={{ fontSize: 40, marginBottom: 10 }}>💬</Text>
-                <Text style={[styles.emptyText, { color: colors.textSecondary }]}>No comments yet.</Text>
-                <Text style={[styles.emptyText, { color: colors.textSecondary }]}>Be the first to share your thoughts!</Text>
-              </View>
-            )
-          }
-        />
-
-        <View style={[styles.inputContainer, { backgroundColor: colors.card, borderTopColor: colors.border }]}>
-          <TextInput
-            style={[styles.input, { backgroundColor: colors.background, color: colors.text, borderColor: colors.border }]}
-            placeholder={isLogged ? "Add a comment..." : "Log in to comment"}
-            placeholderTextColor={colors.textSecondary}
-            value={newComment}
-            onChangeText={setNewComment}
-            editable={isLogged}
-            multiline
+          <FlatList
+            data={comments}
+            keyExtractor={item => item.id}
+            renderItem={renderComment}
+            contentContainerStyle={styles.listContainer}
+            ListEmptyComponent={
+              loading ? (
+                <ActivityIndicator size="large" color={colors.primary} style={{ marginTop: 20 }} />
+              ) : (
+                <View style={styles.emptyContainer}>
+                  <Text style={{ fontSize: 40, marginBottom: 10 }}>💬</Text>
+                  <Text style={[styles.emptyText, { color: colors.textSecondary }]}>No comments yet.</Text>
+                  <Text style={[styles.emptyText, { color: colors.textSecondary }]}>Be the first to share your thoughts!</Text>
+                </View>
+              )
+            }
           />
-          <TouchableOpacity
-            style={[styles.sendButton, { backgroundColor: colors.primary }, (!isLogged || submitting || !newComment.trim()) && { opacity: 0.5 }]}
-            onPress={handleAddComment}
-            disabled={!isLogged || submitting || !newComment.trim()}
-          >
-            <Text style={styles.sendButtonText}>Send</Text>
-          </TouchableOpacity>
-        </View>
-      </SafeAreaView>
-    </KeyboardAvoidingView>
+
+          <View style={[styles.inputContainer, { backgroundColor: colors.card, borderTopColor: colors.border }]}>
+            <TextInput
+              style={[styles.input, { backgroundColor: colors.background, color: colors.text, borderColor: colors.border }]}
+              placeholder={isLogged ? "Add a comment..." : "Log in to comment"}
+              placeholderTextColor={colors.textSecondary}
+              value={newComment}
+              onChangeText={setNewComment}
+              editable={isLogged}
+              multiline
+            />
+            <TouchableOpacity
+              style={[styles.sendButton, { backgroundColor: colors.primary }, (!isLogged || submitting || !newComment.trim()) && { opacity: 0.5 }]}
+              onPress={handleAddComment}
+              disabled={!isLogged || submitting || !newComment.trim()}
+            >
+              <Text style={styles.sendButtonText}>Send</Text>
+            </TouchableOpacity>
+          </View>
+        </SafeAreaView>
+      </KeyboardAvoidingView>
+    </View>
   );
 }
 

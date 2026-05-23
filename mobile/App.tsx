@@ -23,6 +23,7 @@ import EditProfileScreen from './src/screens/EditProfileScreen';
 import LeaderboardScreen from './src/screens/LeaderboardScreen';
 import NoteDetailScreen from './src/screens/NoteDetailScreen';
 import QuestionDetailScreen from './src/screens/QuestionDetailScreen';
+import PomodoroScreen from './src/screens/PomodoroScreen';
 
 import { ThemeProvider, useTheme } from './src/context/ThemeContext';
 import { AuthProvider, useAuth } from './src/context/AuthContext';
@@ -42,6 +43,7 @@ function TabNavigator() {
           if (route.name === 'Dashboard') iconName = 'home';
           else if (route.name === 'Questions') iconName = 'help-circle';
           else if (route.name === 'Favorites') iconName = 'heart';
+          else if (route.name === 'Pomodoro') iconName = 'timer';
           else if (route.name === 'Profile') iconName = 'person';
 
           return (
@@ -64,6 +66,7 @@ function TabNavigator() {
       <Tab.Screen name="Dashboard" component={HomeScreen} />
       <Tab.Screen name="Questions" component={QuestionsScreen} />
       <Tab.Screen name="Favorites" component={FavoritesScreen} />
+      <Tab.Screen name="Pomodoro" component={PomodoroScreen} />
       <Tab.Screen name="Profile" component={ProfileScreen} />
     </Tab.Navigator>
   );
