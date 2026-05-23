@@ -18,14 +18,16 @@ export default function LeaderboardScreen({ navigation }: any) {
   const { userId: currentUserId } = useAuth();
   const [users, setUsers] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
+  const [type, setType] = useState<'points' | 'pomodoro'>('points');
 
   useEffect(() => {
-    fetchLeaderboard();
-  }, []);
+    fetchLeaderboard(type);
+  }, [type]);
 
-  const fetchLeaderboard = async () => {
+  const fetchLeaderboard = async (currentType: 'points' | 'pomodoro') => {
     try {
-      const res = await api.get('/auth/leaderboard');
+      setLoading(true);
+      const res = await api.get(`/auth/leaderboard?type=${currentType}`);
       setUsers(res.data.data);
     } catch (e) {
       console.log('Leaderboard error', e);
@@ -80,8 +82,12 @@ export default function LeaderboardScreen({ navigation }: any) {
         </View>
 
         <View style={styles.pointsContainer}>
-          <Text style={[styles.points, { color: colors.primary }]}>{item.points}</Text>
-          <Text style={[styles.pointsLabel, { color: colors.textSecondary }]}>pts</Text>
+          <Text style={[styles.points, { color: colors.primary }]}>
+            {type === 'points' ? item.points : item.pomodoroMinutes || 0}
+          </Text>
+          <Text style={[styles.pointsLabel, { color: colors.textSecondary }]}>
+            {type === 'points' ? 'pts' : 'mins'}
+          </Text>
         </View>
       </View>
     );
@@ -106,10 +112,29 @@ export default function LeaderboardScreen({ navigation }: any) {
 
       <View style={{ flex: 1, backgroundColor: colors.background }}>
         <View style={[styles.banner, { backgroundColor: colors.primary }]}>
-        <Text style={styles.bannerEmoji}>🏆</Text>
-        <Text style={styles.bannerTitle}>Top Students</Text>
-        <Text style={styles.bannerSub}>Earn points by uploading notes and getting favorites!</Text>
-      </View>
+          <Text style={styles.bannerEmoji}>{type === 'points' ? '🏆' : '⏱️'}</Text>
+          <Text style={styles.bannerTitle}>{type === 'points' ? 'Top Students' : 'Focus Masters'}</Text>
+          <Text style={styles.bannerSub}>
+            {type === 'points' 
+              ? 'Earn points by uploading notes and getting favorites!' 
+              : 'Track your Pomodoro time and compete with others!'}
+          </Text>
+        </View>
+
+        <View style={styles.toggleContainer}>
+          <TouchableOpacity 
+            style={[styles.toggleButton, type === 'points' && { backgroundColor: colors.primary }]}
+            onPress={() => setType('points')}
+          >
+            <Text style={[styles.toggleText, { color: type === 'points' ? '#fff' : colors.textSecondary }]}>Points</Text>
+          </TouchableOpacity>
+          <TouchableOpacity 
+            style={[styles.toggleButton, type === 'pomodoro' && { backgroundColor: colors.primary }]}
+            onPress={() => setType('pomodoro')}
+          >
+            <Text style={[styles.toggleText, { color: type === 'pomodoro' ? '#fff' : colors.textSecondary }]}>Pomodoro</Text>
+          </TouchableOpacity>
+        </View>
 
       <FlatList
         data={users}
@@ -141,7 +166,23 @@ const styles = StyleSheet.create({
   bannerEmoji: { fontSize: 40, marginBottom: 8 },
   bannerTitle: { color: '#fff', fontSize: 22, fontWeight: 'bold', marginBottom: 4 },
   bannerSub: { color: 'rgba(255,255,255,0.8)', fontSize: 13, textAlign: 'center' },
-  list: { padding: 16 },
+  toggleContainer: {
+    flexDirection: 'row',
+    padding: 16,
+    justifyContent: 'center',
+    gap: 12,
+  },
+  toggleButton: {
+    paddingVertical: 8,
+    paddingHorizontal: 20,
+    borderRadius: 20,
+    backgroundColor: '#f3f4f6',
+  },
+  toggleText: {
+    fontWeight: 'bold',
+    fontSize: 14,
+  },
+  list: { padding: 16, paddingTop: 0 },
   card: {
     flexDirection: 'row',
     alignItems: 'center',

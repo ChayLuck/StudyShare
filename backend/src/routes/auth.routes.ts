@@ -9,7 +9,8 @@ import {
   getMe,
   updateProfile,
   deleteAccount,
-  getLeaderboard
+  getLeaderboard,
+  addPomodoroMinutes
 } from '../controllers/auth.controller';
 import { requireAuth } from '../middlewares/auth.middleware';
 
@@ -28,5 +29,6 @@ router.get('/me', requireAuth, getMe);
 router.put('/update-profile', requireAuth, upload.single('avatar'), updateProfile);
 router.delete('/delete-account', requireAuth, deleteAccount);
 router.get('/leaderboard', getLeaderboard);
+router.post('/pomodoro', requireAuth, addPomodoroMinutes);
 
 export default router;

@@ -4,6 +4,7 @@ import { SafeAreaView } from 'react-native-safe-area-context';
 import { useTheme } from '../context/ThemeContext';
 import { Ionicons } from '@expo/vector-icons';
 import Svg, { Circle } from 'react-native-svg';
+import api from '../services/api';
 
 export default function PomodoroScreen() {
   const { colors, isDark } = useTheme();
@@ -16,10 +17,27 @@ export default function PomodoroScreen() {
   const [isWorkMode, setIsWorkMode] = useState(true);
 
   const timerRef = useRef<NodeJS.Timeout | null>(null);
+  const elapsedSecondsRef = useRef(0);
+
+  const syncPomodoroMinute = async (minutes: number) => {
+    try {
+      await api.post('/auth/pomodoro', { minutes });
+    } catch (e) {
+      console.log('Failed to sync pomodoro minutes', e);
+    }
+  };
 
   useEffect(() => {
     if (isRunning) {
       timerRef.current = setInterval(() => {
+        if (isWorkMode) {
+          elapsedSecondsRef.current += 1;
+          if (elapsedSecondsRef.current >= 60) {
+            syncPomodoroMinute(1);
+            elapsedSecondsRef.current -= 60;
+          }
+        }
+
         setTimeLeft((prev) => {
           if (prev <= 1) {
             clearInterval(timerRef.current as NodeJS.Timeout);

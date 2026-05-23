@@ -16,6 +16,7 @@ model User {
   role            Role           @default(USER)
   isEmailVerified Boolean        @default(false)
   points          Int            @default(0)
+  pomodoroMinutes Int            @default(0)
   createdAt       DateTime       @default(now())
   updatedAt       DateTime       @updatedAt
   notes           Note[]

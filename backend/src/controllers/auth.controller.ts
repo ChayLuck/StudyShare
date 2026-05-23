@@ -320,6 +320,25 @@ export const deleteAccount = async (req: any, res: Response): Promise<void> => {
 
 export const getLeaderboard = async (req: any, res: Response): Promise<void> => {
   try {
+    const type = req.query.type as string; // 'points' or 'pomodoro'
+    
+    if (type === 'pomodoro') {
+      const topUsers = await prisma.user.findMany({
+        orderBy: { pomodoroMinutes: 'desc' },
+        take: 10,
+        select: {
+          id: true,
+          name: true,
+          university: true,
+          avatarUrl: true,
+          pomodoroMinutes: true,
+        }
+      });
+      res.json({ data: topUsers });
+      return;
+    }
+
+    // Default to points
     const topUsers = await prisma.user.findMany({
       orderBy: { points: 'desc' },
       take: 10,
@@ -334,6 +353,36 @@ export const getLeaderboard = async (req: any, res: Response): Promise<void> => 
     res.json({ data: topUsers });
   } catch (error) {
     console.error('Leaderboard Error:', error);
+    res.status(500).json({ error: 'Internal server error' });
+  }
+};
+
+export const addPomodoroMinutes = async (req: any, res: Response): Promise<void> => {
+  try {
+    if (!req.user) {
+      res.status(401).json({ error: 'Unauthorized' });
+      return;
+    }
+    const userId = req.user.userId || req.user.id;
+    const { minutes } = req.body;
+
+    if (!minutes || typeof minutes !== 'number' || minutes <= 0) {
+      res.status(400).json({ error: 'Invalid minutes' });
+      return;
+    }
+
+    const updatedUser = await prisma.user.update({
+      where: { id: userId },
+      data: {
+        pomodoroMinutes: {
+          increment: Math.round(minutes)
+        }
+      }
+    });
+
+    res.json({ message: 'Pomodoro minutes added', pomodoroMinutes: updatedUser.pomodoroMinutes });
+  } catch (error) {
+    console.error('Add Pomodoro Minutes Error:', error);
     res.status(500).json({ error: 'Internal server error' });
   }
 };
