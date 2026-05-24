@@ -1,6 +1,6 @@
 import { Router } from 'express';
 import multer from 'multer';
-import { uploadNote, getNotes, fuzzySearch, deleteNote, getMyNotes, getMyFavorites, addComment, getComments } from '../controllers/note.controller';
+import { uploadNote, getNotes, fuzzySearch, deleteNote, getMyNotes, getMyFavorites, addComment, getComments, summarizeNote } from '../controllers/note.controller';
 import { requireAuth, optionalAuth } from '../middlewares/auth.middleware';
 
 const router = Router();
@@ -14,5 +14,6 @@ router.get('/my-favorites', requireAuth, getMyFavorites);
 router.delete('/:id', requireAuth, deleteNote);
 router.post('/:id/comments', requireAuth, addComment);
 router.get('/:id/comments', optionalAuth, getComments);
+router.post('/:id/summarize', requireAuth, summarizeNote);
 
 export default router;

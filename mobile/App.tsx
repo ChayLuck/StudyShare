@@ -24,6 +24,7 @@ import LeaderboardScreen from './src/screens/LeaderboardScreen';
 import NoteDetailScreen from './src/screens/NoteDetailScreen';
 import QuestionDetailScreen from './src/screens/QuestionDetailScreen';
 import PomodoroScreen from './src/screens/PomodoroScreen';
+import AiSummaryScreen from './src/screens/AiSummaryScreen';
 
 import { ThemeProvider, useTheme } from './src/context/ThemeContext';
 import { AuthProvider, useAuth } from './src/context/AuthContext';
@@ -100,6 +101,7 @@ function AppContent() {
             <Stack.Screen name="NoteDetail" component={NoteDetailScreen} />
             <Stack.Screen name="QuestionDetail" component={QuestionDetailScreen} />
             <Stack.Screen name="UserQuestions" component={QuestionsScreen} />
+            <Stack.Screen name="AiSummary" component={AiSummaryScreen} />
           </>
         )}
       </Stack.Navigator>

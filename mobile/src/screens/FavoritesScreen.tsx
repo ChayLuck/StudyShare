@@ -2,6 +2,7 @@ import React, { useEffect, useState } from 'react';
 import { View, Text, FlatList, TouchableOpacity, StyleSheet, ActivityIndicator, Image, Linking, Alert } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { Ionicons } from '@expo/vector-icons';
+import * as WebBrowser from 'expo-web-browser';
 import api from '../services/api';
 import { useTheme } from '../context/ThemeContext';
 
@@ -29,8 +30,12 @@ export default function FavoritesScreen({ navigation }: any) {
     }
   };
 
-  const viewFile = (fileUrl: string) => {
-    Linking.openURL(fileUrl).catch(() => Alert.alert('Error', 'Unable to open file'));
+  const viewFile = async (fileUrl: string) => {
+    try {
+      await WebBrowser.openBrowserAsync(fileUrl);
+    } catch (error) {
+      Alert.alert('Error', 'Unable to open file');
+    }
   };
 
   const getThumbnailUrl = (fileUrl: string) => {
@@ -52,6 +57,14 @@ export default function FavoritesScreen({ navigation }: any) {
       onPress={() => viewFile(item.fileUrl)}
       activeOpacity={0.8}
     >
+      <View style={{ position: "absolute", top: 12, right: 12, zIndex: 10 }}>
+        <TouchableOpacity
+          onPress={() => navigation.navigate("AiSummary", { note: item })}
+          style={{ padding: 5 }}
+        >
+          <Ionicons name="sparkles" size={20} color="#EAB308" />
+        </TouchableOpacity>
+      </View>
       {/* Kullanıcı bilgisi ve tarih */}
       <View style={styles.userRow}>
         <View style={{ flexDirection: 'row', alignItems: 'center' }}>
@@ -93,10 +106,6 @@ export default function FavoritesScreen({ navigation }: any) {
       <View style={[styles.divider, { backgroundColor: colors.divider }]} />
 
       <View style={[styles.cardFooter, { justifyContent: 'space-between' }]}>
-        <TouchableOpacity style={[styles.viewButton, { backgroundColor: colors.primary }]} onPress={() => viewFile(item.fileUrl)}>
-          <Text style={styles.viewButtonText}>View Material</Text>
-        </TouchableOpacity>
-
         <TouchableOpacity onPress={() => navigation.navigate('NoteDetail', { note: item })} style={{ marginRight: 5 }}>
           <Ionicons name="chatbubble-outline" size={20} color={colors.textSecondary} />
         </TouchableOpacity>

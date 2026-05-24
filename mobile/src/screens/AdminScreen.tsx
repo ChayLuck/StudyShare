@@ -2,6 +2,7 @@ import React, { useEffect, useState } from 'react';
 import { View, Text, FlatList, TouchableOpacity, StyleSheet, Alert, Linking } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { Ionicons } from '@expo/vector-icons';
+import * as WebBrowser from 'expo-web-browser';
 import api from '../services/api';
 
 export default function AdminScreen({ navigation }: any) {
@@ -21,8 +22,12 @@ export default function AdminScreen({ navigation }: any) {
     }
   };
 
-  const viewFile = (fileUrl: string) => {
-    Linking.openURL(fileUrl).catch(() => Alert.alert('Error', 'Unable to open file'));
+  const viewFile = async (fileUrl: string) => {
+    try {
+      await WebBrowser.openBrowserAsync(fileUrl);
+    } catch (error) {
+      Alert.alert('Error', 'Unable to open file');
+    }
   };
 
   const verifyNote = async (id: string) => {

@@ -5,6 +5,7 @@ import { checkMagicNumbers } from '../utils/file.util';
 import { containsProfanity } from '../services/profanity.service';
 import { indexMetadata, searchMetadata } from '../services/search.service';
 import { AuthRequest } from '../middlewares/auth.middleware';
+import { generateSummary } from '../services/gemini.service';
 
 export const uploadNote = async (req: AuthRequest, res: Response): Promise<void> => {
   try {
@@ -277,5 +278,48 @@ export const getComments = async (req: Request, res: Response): Promise<void> =>
     res.json({ data: comments });
   } catch (error: any) {
     res.status(500).json({ error: 'Internal server error' });
+  }
+};
+
+export const summarizeNote = async (req: AuthRequest, res: Response): Promise<void> => {
+  try {
+    const id = req.params.id as string;
+    const userId = req.user?.userId;
+
+    if (!userId) {
+      res.status(401).json({ error: 'Unauthorized' });
+      return;
+    }
+
+    const note = await prisma.note.findUnique({
+      where: { id }
+    });
+
+    if (!note) {
+      res.status(404).json({ error: 'Note not found' });
+      return;
+    }
+
+    // Check if summary is already cached
+    if (note.aiSummary) {
+      console.log(`[Note Controller] Returning cached AI summary for note: ${id}`);
+      res.json({ summary: note.aiSummary });
+      return;
+    }
+
+    // Otherwise, generate the summary using Gemini Service
+    console.log(`[Note Controller] Generating new AI summary for note: ${id}`);
+    const summary = await generateSummary(note.fileUrl, note.mimeType);
+
+    // Cache the summary in the database
+    await prisma.note.update({
+      where: { id },
+      data: { aiSummary: summary }
+    });
+
+    res.json({ summary });
+  } catch (error: any) {
+    console.error('AI Summarization Error:', error);
+    res.status(500).json({ error: 'Failed to generate summary', details: error.message });
   }
 };

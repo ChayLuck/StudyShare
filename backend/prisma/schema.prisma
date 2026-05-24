@@ -65,6 +65,7 @@ model Note {
   fileUrl     String
   fileSize    Int
   mimeType    String
+  aiSummary   String?
   userId      String
   isHidden    Boolean        @default(false)
   needsReview Boolean        @default(false)

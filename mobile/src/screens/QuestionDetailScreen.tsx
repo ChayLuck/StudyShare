@@ -6,6 +6,7 @@ import {
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { Ionicons } from '@expo/vector-icons';
+import * as WebBrowser from 'expo-web-browser';
 import { useTheme } from '../context/ThemeContext';
 import api from '../services/api';
 import * as ImagePicker from 'expo-image-picker';
@@ -196,7 +197,13 @@ export default function QuestionDetailScreen({ route, navigation }: any) {
       {question.fileUrl && (
         <TouchableOpacity
           style={styles.attachmentContainer}
-          onPress={() => Linking.openURL(question.fileUrl)}
+          onPress={async () => {
+            try {
+              await WebBrowser.openBrowserAsync(question.fileUrl);
+            } catch (error) {
+              Alert.alert('Error', 'Unable to open file');
+            }
+          }}
         >
           <Image
             source={{ uri: getThumbnailUrl(question.fileUrl) }}
@@ -247,7 +254,13 @@ export default function QuestionDetailScreen({ route, navigation }: any) {
         {item.fileUrl && (
           <TouchableOpacity
             style={styles.answerAttachment}
-            onPress={() => Linking.openURL(item.fileUrl)}
+            onPress={async () => {
+              try {
+                await WebBrowser.openBrowserAsync(item.fileUrl);
+              } catch (error) {
+                Alert.alert('Error', 'Unable to open file');
+              }
+            }}
           >
             <Image
               source={{ uri: getThumbnailUrl(item.fileUrl) }}

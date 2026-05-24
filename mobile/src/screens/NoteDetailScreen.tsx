@@ -13,13 +13,14 @@ import {
   Alert
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
+import { Ionicons } from '@expo/vector-icons';
 import api from '../services/api';
 import { useTheme } from '../context/ThemeContext';
 import { useAuth } from '../context/AuthContext';
 
 export default function NoteDetailScreen({ route, navigation }: any) {
   const { note } = route.params;
-  const { colors, isDark } = useTheme();
+  const { colors } = useTheme();
   const { isLoggedIn: isLogged } = useAuth();
 
   const [comments, setComments] = useState<any[]>([]);
@@ -45,7 +46,7 @@ export default function NoteDetailScreen({ route, navigation }: any) {
 
   const handleAddComment = async () => {
     if (!isLogged) {
-      return Alert.alert('Error', 'You must be logged in to comment');
+      return Alert.alert('Error', 'You must be logged in to comment.');
     }
     if (!newComment.trim()) return;
 
@@ -55,7 +56,7 @@ export default function NoteDetailScreen({ route, navigation }: any) {
       setComments([res.data.comment, ...comments]);
       setNewComment('');
     } catch (e: any) {
-      Alert.alert('Error', e.response?.data?.error || 'Failed to add comment');
+      Alert.alert('Error', e.response?.data?.error || 'Failed to add comment.');
     } finally {
       setSubmitting(false);
     }
@@ -71,7 +72,7 @@ export default function NoteDetailScreen({ route, navigation }: any) {
         </View>
       )}
       <View style={styles.commentContent}>
-        <Text style={[styles.commentName, { color: colors.text }]}>{item.user?.name || 'Anonymous'}</Text>
+        <Text style={[styles.commentName, { color: colors.text }]}>{item.user?.name || 'Anonymous Student'}</Text>
         <Text style={[styles.commentText, { color: colors.textSecondary }]}>{item.text}</Text>
       </View>
     </View>
@@ -88,7 +89,10 @@ export default function NoteDetailScreen({ route, navigation }: any) {
           {/* Header */}
           <View style={[styles.header, { backgroundColor: colors.card, borderBottomColor: colors.border }]}>
             <TouchableOpacity style={styles.backButton} onPress={() => navigation.goBack()}>
-              <Text style={[styles.headerTitle, { color: colors.text }]}>← Comments</Text>
+              <View style={{ flexDirection: 'row', alignItems: 'center' }}>
+                <Ionicons name="arrow-back" size={24} color={colors.text} style={{ marginRight: 8 }} />
+                <Text style={[styles.headerTitle, { color: colors.text }]}>Comments</Text>
+              </View>
             </TouchableOpacity>
           </View>
 
@@ -113,7 +117,7 @@ export default function NoteDetailScreen({ route, navigation }: any) {
           <View style={[styles.inputContainer, { backgroundColor: colors.card, borderTopColor: colors.border }]}>
             <TextInput
               style={[styles.input, { backgroundColor: colors.background, color: colors.text, borderColor: colors.border }]}
-              placeholder={isLogged ? "Add a comment..." : "Log in to comment"}
+              placeholder={isLogged ? "Write a comment..." : "Log in to comment"}
               placeholderTextColor={colors.textSecondary}
               value={newComment}
               onChangeText={setNewComment}
