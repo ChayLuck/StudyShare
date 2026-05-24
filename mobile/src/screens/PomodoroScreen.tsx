@@ -1,10 +1,10 @@
-import React, { useState, useEffect, useRef } from 'react';
-import { View, Text, StyleSheet, TouchableOpacity, Alert } from 'react-native';
-import { SafeAreaView } from 'react-native-safe-area-context';
-import { useTheme } from '../context/ThemeContext';
-import { Ionicons } from '@expo/vector-icons';
-import Svg, { Circle } from 'react-native-svg';
-import api from '../services/api';
+import React, { useState, useEffect, useRef } from "react";
+import { View, Text, StyleSheet, TouchableOpacity, Alert } from "react-native";
+import { SafeAreaView } from "react-native-safe-area-context";
+import { useTheme } from "../context/ThemeContext";
+import { Ionicons } from "@expo/vector-icons";
+import Svg, { Circle } from "react-native-svg";
+import api from "../services/api";
 
 export default function PomodoroScreen() {
   const { colors, isDark } = useTheme();
@@ -16,14 +16,14 @@ export default function PomodoroScreen() {
   const [isRunning, setIsRunning] = useState(false);
   const [isWorkMode, setIsWorkMode] = useState(true);
 
-  const timerRef = useRef<NodeJS.Timeout | null>(null);
+  const timerRef = useRef<ReturnType<typeof setInterval> | null>(null);
   const elapsedSecondsRef = useRef(0);
 
   const syncPomodoroMinute = async (minutes: number) => {
     try {
-      await api.post('/auth/pomodoro', { minutes });
+      await api.post("/auth/pomodoro", { minutes });
     } catch (e) {
-      console.log('Failed to sync pomodoro minutes', e);
+      console.log("Failed to sync pomodoro minutes", e);
     }
   };
 
@@ -40,17 +40,21 @@ export default function PomodoroScreen() {
 
         setTimeLeft((prev) => {
           if (prev <= 1) {
-            clearInterval(timerRef.current as NodeJS.Timeout);
+            if (timerRef.current) {
+              clearInterval(timerRef.current);
+            }
             setIsRunning(false);
-            
+
             // Switch mode
             const nextModeIsWork = !isWorkMode;
             setIsWorkMode(nextModeIsWork);
             setTimeLeft(nextModeIsWork ? WORK_TIME : BREAK_TIME);
-            
+
             Alert.alert(
               "Time's Up!",
-              nextModeIsWork ? "Time to focus! Back to work." : "Great job! Take a short break."
+              nextModeIsWork
+                ? "Time to focus! Back to work."
+                : "Great job! Take a short break.",
             );
             return 0;
           }
@@ -84,7 +88,7 @@ export default function PomodoroScreen() {
   const formatTime = (seconds: number) => {
     const m = Math.floor(seconds / 60);
     const s = seconds % 60;
-    return `${m.toString().padStart(2, '0')}:${s.toString().padStart(2, '0')}`;
+    return `${m.toString().padStart(2, "0")}:${s.toString().padStart(2, "0")}`;
   };
 
   const size = 280;
@@ -93,28 +97,57 @@ export default function PomodoroScreen() {
   const circumference = radius * 2 * Math.PI;
   const maxTime = isWorkMode ? WORK_TIME : BREAK_TIME;
   const progress = timeLeft / maxTime;
-  const strokeDashoffset = circumference - (progress * circumference);
+  const strokeDashoffset = circumference - progress * circumference;
 
   return (
-    <SafeAreaView style={[styles.container, { backgroundColor: colors.background }]}>
+    <SafeAreaView
+      style={[styles.container, { backgroundColor: colors.background }]}
+    >
       <View style={[styles.header, { borderBottomColor: colors.border }]}>
-        <Text style={[styles.headerTitle, { color: colors.text }]}>Pomodoro Timer</Text>
+        <Text style={[styles.headerTitle, { color: colors.text }]}>
+          Pomodoro Timer
+        </Text>
       </View>
 
       <View style={styles.content}>
         {/* Mode Switcher */}
-        <View style={[styles.modeContainer, { backgroundColor: colors.card, borderColor: colors.border }]}>
+        <View
+          style={[
+            styles.modeContainer,
+            { backgroundColor: colors.card, borderColor: colors.border },
+          ]}
+        >
           <TouchableOpacity
-            style={[styles.modeButton, isWorkMode && { backgroundColor: colors.primary }]}
+            style={[
+              styles.modeButton,
+              isWorkMode && { backgroundColor: colors.primary },
+            ]}
             onPress={() => switchMode(true)}
           >
-            <Text style={[styles.modeText, { color: isWorkMode ? '#fff' : colors.textSecondary }]}>Focus</Text>
+            <Text
+              style={[
+                styles.modeText,
+                { color: isWorkMode ? "#fff" : colors.textSecondary },
+              ]}
+            >
+              Focus
+            </Text>
           </TouchableOpacity>
           <TouchableOpacity
-            style={[styles.modeButton, !isWorkMode && { backgroundColor: '#10b981' }]}
+            style={[
+              styles.modeButton,
+              !isWorkMode && { backgroundColor: "#10b981" },
+            ]}
             onPress={() => switchMode(false)}
           >
-            <Text style={[styles.modeText, { color: !isWorkMode ? '#fff' : colors.textSecondary }]}>Break</Text>
+            <Text
+              style={[
+                styles.modeText,
+                { color: !isWorkMode ? "#fff" : colors.textSecondary },
+              ]}
+            >
+              Break
+            </Text>
           </TouchableOpacity>
         </View>
 
@@ -132,7 +165,7 @@ export default function PomodoroScreen() {
             />
             {/* Progress Circle */}
             <Circle
-              stroke={isWorkMode ? colors.primary : '#10b981'}
+              stroke={isWorkMode ? colors.primary : "#10b981"}
               fill="none"
               cx={size / 2}
               cy={size / 2}
@@ -145,33 +178,51 @@ export default function PomodoroScreen() {
             />
           </Svg>
           <View style={styles.timerTextContainer}>
-            <Text style={[styles.timerText, { color: colors.text }]}>{formatTime(timeLeft)}</Text>
-            <Text style={[styles.modeLabel, { color: isWorkMode ? colors.primary : '#10b981' }]}>
-              {isWorkMode ? 'Work Session' : 'Short Break'}
+            <Text style={[styles.timerText, { color: colors.text }]}>
+              {formatTime(timeLeft)}
+            </Text>
+            <Text
+              style={[
+                styles.modeLabel,
+                { color: isWorkMode ? colors.primary : "#10b981" },
+              ]}
+            >
+              {isWorkMode ? "Work Session" : "Short Break"}
             </Text>
           </View>
         </View>
 
         {/* Controls */}
         <View style={styles.controls}>
-          <TouchableOpacity style={[styles.iconButton, { backgroundColor: colors.card }]} onPress={resetTimer}>
+          <TouchableOpacity
+            style={[styles.iconButton, { backgroundColor: colors.card }]}
+            onPress={resetTimer}
+          >
             <Ionicons name="refresh" size={28} color={colors.text} />
           </TouchableOpacity>
-          
-          <TouchableOpacity 
+
+          <TouchableOpacity
             style={[
-              styles.mainButton, 
-              { 
-                backgroundColor: isWorkMode ? colors.primary : '#10b981',
-                shadowColor: isWorkMode ? colors.primary : '#10b981'
-              }
-            ]} 
+              styles.mainButton,
+              {
+                backgroundColor: isWorkMode ? colors.primary : "#10b981",
+                shadowColor: isWorkMode ? colors.primary : "#10b981",
+              },
+            ]}
             onPress={toggleTimer}
           >
-            <Ionicons name={isRunning ? "pause" : "play"} size={36} color="#fff" style={{ marginLeft: isRunning ? 0 : 4 }} />
+            <Ionicons
+              name={isRunning ? "pause" : "play"}
+              size={36}
+              color="#fff"
+              style={{ marginLeft: isRunning ? 0 : 4 }}
+            />
           </TouchableOpacity>
-          
-          <TouchableOpacity style={[styles.iconButton, { opacity: 0 }]} disabled={true}>
+
+          <TouchableOpacity
+            style={[styles.iconButton, { opacity: 0 }]}
+            disabled={true}
+          >
             <Ionicons name="settings" size={28} color={colors.text} />
           </TouchableOpacity>
         </View>
@@ -185,20 +236,20 @@ const styles = StyleSheet.create({
   header: {
     padding: 20,
     borderBottomWidth: 1,
-    alignItems: 'center',
+    alignItems: "center",
   },
   headerTitle: {
     fontSize: 20,
-    fontWeight: 'bold',
+    fontWeight: "bold",
   },
   content: {
     flex: 1,
-    alignItems: 'center',
-    justifyContent: 'center',
+    alignItems: "center",
+    justifyContent: "center",
     padding: 20,
   },
   modeContainer: {
-    flexDirection: 'row',
+    flexDirection: "row",
     borderRadius: 25,
     padding: 4,
     borderWidth: 1,
@@ -211,46 +262,46 @@ const styles = StyleSheet.create({
   },
   modeText: {
     fontSize: 16,
-    fontWeight: 'bold',
+    fontWeight: "bold",
   },
   timerContainer: {
     width: 280,
     height: 280,
-    alignItems: 'center',
-    justifyContent: 'center',
+    alignItems: "center",
+    justifyContent: "center",
     marginBottom: 60,
   },
   svg: {
-    position: 'absolute',
+    position: "absolute",
   },
   timerTextContainer: {
-    alignItems: 'center',
-    justifyContent: 'center',
+    alignItems: "center",
+    justifyContent: "center",
   },
   timerText: {
     fontSize: 72,
-    fontWeight: 'bold',
-    fontVariant: ['tabular-nums'],
+    fontWeight: "bold",
+    fontVariant: ["tabular-nums"],
   },
   modeLabel: {
     fontSize: 18,
-    fontWeight: '600',
+    fontWeight: "600",
     marginTop: 10,
   },
   controls: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    justifyContent: 'center',
+    flexDirection: "row",
+    alignItems: "center",
+    justifyContent: "center",
     gap: 30,
   },
   iconButton: {
     width: 56,
     height: 56,
     borderRadius: 28,
-    alignItems: 'center',
-    justifyContent: 'center',
+    alignItems: "center",
+    justifyContent: "center",
     elevation: 2,
-    shadowColor: '#000',
+    shadowColor: "#000",
     shadowOffset: { width: 0, height: 2 },
     shadowOpacity: 0.1,
     shadowRadius: 4,
@@ -259,10 +310,10 @@ const styles = StyleSheet.create({
     width: 80,
     height: 80,
     borderRadius: 40,
-    alignItems: 'center',
-    justifyContent: 'center',
+    alignItems: "center",
+    justifyContent: "center",
     elevation: 5,
-    shadowColor: '#4F46E5',
+    shadowColor: "#4F46E5",
     shadowOffset: { width: 0, height: 4 },
     shadowOpacity: 0.3,
     shadowRadius: 8,
