@@ -2,6 +2,22 @@ import { Response, Request } from 'express';
 import { prisma } from '../db/prisma';
 import { AuthRequest } from '../middlewares/auth.middleware';
 
+export const getAllNotes = async (req: AuthRequest, res: Response): Promise<void> => {
+  try {
+    const notes = await prisma.note.findMany({
+      orderBy: { createdAt: 'desc' },
+      include: {
+        reports: true,
+        user: { select: { email: true } }
+      }
+    });
+    
+    res.json({ data: notes });
+  } catch (error) {
+    res.status(500).json({ error: 'Internal server error' });
+  }
+};
+
 export const getReportedNotes = async (req: AuthRequest, res: Response): Promise<void> => {
   try {
     const notes = await prisma.note.findMany({

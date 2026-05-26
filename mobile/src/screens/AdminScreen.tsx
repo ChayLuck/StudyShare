@@ -6,19 +6,25 @@ import * as WebBrowser from 'expo-web-browser';
 import api from '../services/api';
 
 export default function AdminScreen({ navigation }: any) {
-  const [reports, setReports] = useState<any[]>([]);
+  const [activeTab, setActiveTab] = useState<'reports' | 'all'>('reports');
+  const [data, setData] = useState<any[]>([]);
+  const [loading, setLoading] = useState(false);
 
   useEffect(() => {
-    fetchReports();
-  }, []);
+    fetchData();
+  }, [activeTab]);
 
-  const fetchReports = async () => {
+  const fetchData = async () => {
+    setLoading(true);
     try {
-      const response = await api.get('/admin/reports');
-      setReports(response.data.data);
+      const endpoint = activeTab === 'reports' ? '/admin/reports' : '/admin/notes';
+      const response = await api.get(endpoint);
+      setData(response.data.data);
     } catch (e: any) {
       Alert.alert('Error', e.response?.data?.error || 'Access denied');
-      navigation.goBack();
+      if (activeTab === 'reports') navigation.goBack();
+    } finally {
+      setLoading(false);
     }
   };
 
@@ -33,8 +39,8 @@ export default function AdminScreen({ navigation }: any) {
   const verifyNote = async (id: string) => {
     try {
       await api.post(`/admin/notes/${id}/verify`);
-      Alert.alert('Success', 'Note verified and reports cleared.');
-      fetchReports();
+      Alert.alert('Success', 'Note verified.');
+      fetchData();
     } catch (e) {
       Alert.alert('Error', 'Failed to verify');
     }
@@ -53,7 +59,7 @@ export default function AdminScreen({ navigation }: any) {
             try {
               await api.delete(`/admin/notes/${id}`);
               Alert.alert('Deleted', 'Note permanently removed');
-              fetchReports();
+              fetchData();
             } catch (e) {
               Alert.alert('Error', 'Failed to delete');
             }
@@ -64,11 +70,13 @@ export default function AdminScreen({ navigation }: any) {
   };
 
   const renderItem = ({ item }: { item: any }) => (
-    <View style={styles.card}>
+    <View style={[styles.card, item.isVerified ? { borderLeftColor: '#10B981' } : {}]}>
       <View style={styles.cardHeader}>
         <Text style={styles.schoolTitle}>{item.schoolName} - {item.courseName}</Text>
-        <View style={styles.badge}>
-          <Text style={styles.badgeText}>{item.reports.length} Reports</Text>
+        <View style={[styles.badge, item.isVerified ? { backgroundColor: '#D1FAE5' } : {}]}>
+          <Text style={[styles.badgeText, item.isVerified ? { color: '#065F46' } : {}]}>
+            {item.isVerified ? 'Verified' : `${item.reports?.length || 0} Reports`}
+          </Text>
         </View>
       </View>
       
@@ -80,13 +88,20 @@ export default function AdminScreen({ navigation }: any) {
       </TouchableOpacity>
 
       <View style={styles.actionRow}>
-        <TouchableOpacity style={styles.verifyBtn} onPress={() => verifyNote(item.id)}>
-          <Ionicons name="checkmark" size={16} color="#10b981" />
-          <Text style={styles.verifyBtnText}> Mark as Safe</Text>
-        </TouchableOpacity>
+        {!item.isVerified ? (
+          <TouchableOpacity style={styles.verifyBtn} onPress={() => verifyNote(item.id)}>
+            <Ionicons name="checkmark" size={16} color="#fff" />
+            <Text style={styles.verifyBtnText}> Verify & Safe</Text>
+          </TouchableOpacity>
+        ) : (
+          <View style={[styles.verifyBtn, { backgroundColor: '#D1FAE5' }]}>
+            <Ionicons name="shield-checkmark" size={16} color="#059669" />
+            <Text style={[styles.verifyBtnText, { color: '#059669' }]}> Verified</Text>
+          </View>
+        )}
         <TouchableOpacity style={styles.deleteBtn} onPress={() => deleteNote(item.id)}>
-          <Ionicons name="trash" size={16} color="#ef4444" />
-          <Text style={styles.deleteBtnText}> Delete Note</Text>
+          <Ionicons name="trash" size={16} color="#fff" />
+          <Text style={styles.deleteBtnText}> Delete</Text>
         </TouchableOpacity>
       </View>
     </View>
@@ -102,15 +117,32 @@ export default function AdminScreen({ navigation }: any) {
         <View style={{ width: 40 }} />
       </View>
 
+      <View style={styles.tabContainer}>
+        <TouchableOpacity 
+          style={[styles.tab, activeTab === 'reports' && styles.activeTab]} 
+          onPress={() => setActiveTab('reports')}
+        >
+          <Text style={[styles.tabText, activeTab === 'reports' && styles.activeTabText]}>Reported</Text>
+        </TouchableOpacity>
+        <TouchableOpacity 
+          style={[styles.tab, activeTab === 'all' && styles.activeTab]} 
+          onPress={() => setActiveTab('all')}
+        >
+          <Text style={[styles.tabText, activeTab === 'all' && styles.activeTabText]}>All Notes</Text>
+        </TouchableOpacity>
+      </View>
+
       <FlatList
-        data={reports}
+        data={data}
         keyExtractor={item => item.id}
         renderItem={renderItem}
         contentContainerStyle={styles.listContainer}
+        refreshing={loading}
+        onRefresh={fetchData}
         ListEmptyComponent={
           <View style={styles.emptyContainer}>
-            <Text style={styles.emptyText}>No pending reports.</Text>
-            <Text style={styles.emptySubText}>All clear! 🎉</Text>
+            <Text style={styles.emptyText}>No notes found.</Text>
+            {activeTab === 'reports' && <Text style={styles.emptySubText}>All clear! 🎉</Text>}
           </View>
         }
       />
@@ -133,7 +165,31 @@ const styles = StyleSheet.create({
   backButton: { padding: 5 },
   backIcon: { fontSize: 24, color: '#374151', fontWeight: 'bold' },
   headerTitle: { fontSize: 18, fontWeight: '700', color: '#1f2937' },
-  listContainer: { padding: 15 },
+  tabContainer: {
+    flexDirection: 'row',
+    backgroundColor: '#fff',
+    borderBottomWidth: 1,
+    borderBottomColor: '#e5e7eb',
+  },
+  tab: {
+    flex: 1,
+    paddingVertical: 12,
+    alignItems: 'center',
+    borderBottomWidth: 2,
+    borderBottomColor: 'transparent',
+  },
+  activeTab: {
+    borderBottomColor: '#4F46E5',
+  },
+  tabText: {
+    fontSize: 15,
+    fontWeight: '600',
+    color: '#6b7280',
+  },
+  activeTabText: {
+    color: '#4F46E5',
+  },
+  listContainer: { padding: 15, paddingBottom: 50 },
   card: {
     backgroundColor: '#fff',
     borderLeftWidth: 4,

@@ -258,23 +258,25 @@ export default function HomeScreen({ navigation }: any) {
                   <Text style={{ color: "#ef4444", fontSize: 14 }}>Delete</Text>
                 </TouchableOpacity>
               )}
-              <TouchableOpacity
-                style={styles.dropdownItem}
-                onPress={() => {
-                  setActiveMenuId(null);
-                  reportNote(item.id);
-                }}
-              >
-                <Ionicons
-                  name="warning-outline"
-                  size={16}
-                  color="#ef4444"
-                  style={{ marginRight: 8 }}
-                />
-                <Text style={{ color: "#ef4444", fontSize: 14 }}>
-                  Report Spam
-                </Text>
-              </TouchableOpacity>
+              {!item.isVerified && (
+                <TouchableOpacity
+                  style={styles.dropdownItem}
+                  onPress={() => {
+                    setActiveMenuId(null);
+                    reportNote(item.id);
+                  }}
+                >
+                  <Ionicons
+                    name="warning-outline"
+                    size={16}
+                    color="#ef4444"
+                    style={{ marginRight: 8 }}
+                  />
+                  <Text style={{ color: "#ef4444", fontSize: 14 }}>
+                    Report Spam
+                  </Text>
+                </TouchableOpacity>
+              )}
             </View>
           )}
 
@@ -323,6 +325,12 @@ export default function HomeScreen({ navigation }: any) {
         >
           {item.schoolName}
         </Text>
+        {item.isVerified && (
+          <View style={{ backgroundColor: '#D1FAE5', paddingHorizontal: 6, paddingVertical: 2, borderRadius: 12, flexDirection: 'row', alignItems: 'center' }}>
+            <Ionicons name="shield-checkmark" size={12} color="#059669" style={{ marginRight: 4 }} />
+            <Text style={{ color: '#059669', fontSize: 10, fontWeight: 'bold' }}>Verified</Text>
+          </View>
+        )}
       </View>
 
       <Text
