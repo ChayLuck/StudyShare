@@ -18,6 +18,36 @@ export const getAllNotes = async (req: AuthRequest, res: Response): Promise<void
   }
 };
 
+export const getAllUsers = async (req: AuthRequest, res: Response): Promise<void> => {
+  try {
+    const users = await prisma.user.findMany({
+      orderBy: { createdAt: 'desc' },
+      select: {
+        id: true,
+        email: true,
+        name: true,
+        role: true,
+        _count: {
+          select: { notes: true }
+        }
+      }
+    });
+    res.json({ data: users });
+  } catch (error) {
+    res.status(500).json({ error: 'Internal server error' });
+  }
+};
+
+export const deleteUser = async (req: AuthRequest, res: Response): Promise<void> => {
+  try {
+    const id = req.params.id as string;
+    await prisma.user.delete({ where: { id } });
+    res.json({ message: 'User deleted permanently' });
+  } catch (error) {
+    res.status(500).json({ error: 'Internal server error' });
+  }
+};
+
 export const getReportedNotes = async (req: AuthRequest, res: Response): Promise<void> => {
   try {
     const notes = await prisma.note.findMany({

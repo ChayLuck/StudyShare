@@ -6,7 +6,7 @@ import * as WebBrowser from 'expo-web-browser';
 import api from '../services/api';
 
 export default function AdminScreen({ navigation }: any) {
-  const [activeTab, setActiveTab] = useState<'reports' | 'all'>('reports');
+  const [activeTab, setActiveTab] = useState<'reports' | 'all' | 'users'>('reports');
   const [data, setData] = useState<any[]>([]);
   const [loading, setLoading] = useState(false);
 
@@ -17,7 +17,10 @@ export default function AdminScreen({ navigation }: any) {
   const fetchData = async () => {
     setLoading(true);
     try {
-      const endpoint = activeTab === 'reports' ? '/admin/reports' : '/admin/notes';
+      let endpoint = '/admin/reports';
+      if (activeTab === 'all') endpoint = '/admin/notes';
+      else if (activeTab === 'users') endpoint = '/admin/users';
+
       const response = await api.get(endpoint);
       setData(response.data.data);
     } catch (e: any) {
@@ -69,7 +72,30 @@ export default function AdminScreen({ navigation }: any) {
     );
   };
 
-  const renderItem = ({ item }: { item: any }) => (
+  const deleteUser = async (id: string) => {
+    Alert.alert(
+      'Confirm User Deletion',
+      'Are you sure you want to permanently delete this user? Their uploaded content will remain as "Unknown User".',
+      [
+        { text: 'Cancel', style: 'cancel' },
+        { 
+          text: 'Delete', 
+          style: 'destructive', 
+          onPress: async () => {
+            try {
+              await api.delete(`/admin/users/${id}`);
+              Alert.alert('Deleted', 'User permanently removed');
+              fetchData();
+            } catch (e) {
+              Alert.alert('Error', 'Failed to delete user');
+            }
+          } 
+        }
+      ]
+    );
+  };
+
+  const renderContentItem = ({ item }: { item: any }) => (
     <View style={[styles.card, item.isVerified ? { borderLeftColor: '#10B981' } : {}]}>
       <View style={styles.cardHeader}>
         <Text style={styles.schoolTitle}>{item.schoolName} - {item.courseName}</Text>
@@ -80,7 +106,7 @@ export default function AdminScreen({ navigation }: any) {
         </View>
       </View>
       
-      <Text style={styles.userInfo}>Uploader: <Text style={{fontWeight: 'bold'}}>{item.user.email}</Text></Text>
+      <Text style={styles.userInfo}>Uploader: <Text style={{fontWeight: 'bold'}}>{item.user?.email || 'Unknown User'}</Text></Text>
 
       <TouchableOpacity style={styles.viewButton} onPress={() => viewFile(item.fileUrl)}>
         <Ionicons name="document" size={16} color="#4F46E5" />
@@ -102,6 +128,29 @@ export default function AdminScreen({ navigation }: any) {
         <TouchableOpacity style={styles.deleteBtn} onPress={() => deleteNote(item.id)}>
           <Ionicons name="trash" size={16} color="#fff" />
           <Text style={styles.deleteBtnText}> Delete</Text>
+        </TouchableOpacity>
+      </View>
+    </View>
+  );
+
+  const renderUserItem = ({ item }: { item: any }) => (
+    <View style={[styles.card, { borderLeftColor: '#3B82F6' }]}>
+      <View style={styles.cardHeader}>
+        <Text style={styles.schoolTitle}>{item.name || 'Anonymous'}</Text>
+        <View style={[styles.badge, { backgroundColor: '#DBEAFE' }]}>
+          <Text style={[styles.badgeText, { color: '#1E40AF' }]}>
+            {item.role}
+          </Text>
+        </View>
+      </View>
+      
+      <Text style={styles.userInfo}>Email: <Text style={{fontWeight: 'bold'}}>{item.email}</Text></Text>
+      <Text style={styles.userInfo}>Total Uploads: <Text style={{fontWeight: 'bold'}}>{item._count?.notes || 0}</Text></Text>
+
+      <View style={[styles.actionRow, { marginTop: 10 }]}>
+        <TouchableOpacity style={styles.deleteBtn} onPress={() => deleteUser(item.id)}>
+          <Ionicons name="trash" size={16} color="#fff" />
+          <Text style={styles.deleteBtnText}> Delete User</Text>
         </TouchableOpacity>
       </View>
     </View>
@@ -130,18 +179,24 @@ export default function AdminScreen({ navigation }: any) {
         >
           <Text style={[styles.tabText, activeTab === 'all' && styles.activeTabText]}>All Notes</Text>
         </TouchableOpacity>
+        <TouchableOpacity 
+          style={[styles.tab, activeTab === 'users' && styles.activeTab]} 
+          onPress={() => setActiveTab('users')}
+        >
+          <Text style={[styles.tabText, activeTab === 'users' && styles.activeTabText]}>Users</Text>
+        </TouchableOpacity>
       </View>
 
       <FlatList
         data={data}
         keyExtractor={item => item.id}
-        renderItem={renderItem}
+        renderItem={activeTab === 'users' ? renderUserItem : renderContentItem}
         contentContainerStyle={styles.listContainer}
         refreshing={loading}
         onRefresh={fetchData}
         ListEmptyComponent={
           <View style={styles.emptyContainer}>
-            <Text style={styles.emptyText}>No notes found.</Text>
+            <Text style={styles.emptyText}>No data found.</Text>
             {activeTab === 'reports' && <Text style={styles.emptySubText}>All clear! 🎉</Text>}
           </View>
         }
