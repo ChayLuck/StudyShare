@@ -5,6 +5,7 @@ import { checkMagicNumbers } from '../utils/file.util';
 import { containsProfanity } from '../services/profanity.service';
 import { indexMetadata, searchMetadata } from '../services/search.service';
 import { AuthRequest } from '../middlewares/auth.middleware';
+import { generateSummary } from '../services/gemini.service';
 
 export const uploadNote = async (req: AuthRequest, res: Response): Promise<void> => {
   try {
@@ -60,6 +61,12 @@ export const uploadNote = async (req: AuthRequest, res: Response): Promise<void>
     indexMetadata('course', upperCourseName);
     indexMetadata('school', upperSchoolName);
 
+    // Update user points (+10 for uploading)
+    await prisma.user.update({
+      where: { id: userId },
+      data: { points: { increment: 10 } }
+    });
+
     res.status(201).json({ message: 'Note uploaded successfully', note });
   } catch (error) {
     console.error('Upload Error:', error);
@@ -76,7 +83,7 @@ export const getNotes = async (req: AuthRequest, res: Response): Promise<void> =
     const skip = (page - 1) * limit;
 
     const where: any = { isHidden: false };
-    
+
     // School filter from chips
     if (school && school !== 'ALL') {
       where.schoolName = school as string;
@@ -98,7 +105,7 @@ export const getNotes = async (req: AuthRequest, res: Response): Promise<void> =
       take: limit,
       orderBy: { createdAt: 'desc' },
       include: {
-        user: { select: { email: true } },
+        user: { select: { email: true, name: true, avatarUrl: true } },
       }
     });
 
@@ -132,5 +139,187 @@ export const fuzzySearch = async (req: Request, res: Response): Promise<void> =>
     res.json({ results });
   } catch (error) {
     res.status(500).json({ error: 'Search error' });
+  }
+};
+export const deleteNote = async (req: AuthRequest, res: Response): Promise<void> => {
+  try {
+    const userId = req.user?.userId;
+    const id = req.params.id as string;
+
+    if (!userId) {
+      res.status(401).json({ error: 'Unauthorized' });
+      return;
+    }
+
+    const note = await prisma.note.findUnique({
+      where: { id }
+    });
+
+    if (!note) {
+      res.status(404).json({ error: 'Note not found' });
+      return;
+    }
+
+    if (note.userId !== userId) {
+      res.status(403).json({ error: 'You do not have permission to delete this note' });
+      return;
+    }
+
+    // Delete associated favorites and reports first to avoid foreign key constraint errors
+    await prisma.$transaction([
+      prisma.comment.deleteMany({
+        where: { noteId: id }
+      }),
+      prisma.noteFavorite.deleteMany({
+        where: { noteId: id }
+      }),
+      prisma.report.deleteMany({
+        where: { noteId: id }
+      }),
+      prisma.note.delete({
+        where: { id }
+      })
+    ]);
+
+    res.json({ message: 'Note deleted successfully' });
+  } catch (error: any) {
+    console.error('Delete Note Error:', error);
+    res.status(500).json({ error: 'Internal server error', details: error.message });
+  }
+};
+
+export const getMyNotes = async (req: AuthRequest, res: Response): Promise<void> => {
+  try {
+    const userId = req.user?.userId;
+    if (!userId) {
+      res.status(401).json({ error: 'Unauthorized' });
+      return;
+    }
+    const notes = await prisma.note.findMany({
+      where: { userId },
+      orderBy: { createdAt: 'desc' },
+      include: { _count: { select: { favorites: true } } }
+    });
+    res.json({ data: notes });
+  } catch (error: any) {
+    res.status(500).json({ error: 'Internal server error' });
+  }
+};
+
+export const getMyFavorites = async (req: AuthRequest, res: Response): Promise<void> => {
+  try {
+    const userId = req.user?.userId;
+    if (!userId) {
+      res.status(401).json({ error: 'Unauthorized' });
+      return;
+    }
+    const favorites = await prisma.noteFavorite.findMany({
+      where: { userId },
+      include: {
+        note: {
+          include: {
+            user: { select: { email: true, name: true, avatarUrl: true } },
+            _count: { select: { favorites: true } }
+          }
+        }
+      },
+      orderBy: { note: { createdAt: 'desc' } }
+    });
+    res.json({ data: favorites.map(f => f.note) });
+  } catch (error: any) {
+    res.status(500).json({ error: 'Internal server error' });
+  }
+};
+
+export const addComment = async (req: AuthRequest, res: Response): Promise<void> => {
+  try {
+    const userId = req.user?.userId;
+    const noteId = req.params.id as string;
+    const { text } = req.body;
+
+    if (!userId) {
+      res.status(401).json({ error: 'Unauthorized' });
+      return;
+    }
+    if (!text || text.trim() === '') {
+      res.status(400).json({ error: 'Comment text is required' });
+      return;
+    }
+
+    const comment = await prisma.comment.create({
+      data: {
+        text,
+        userId,
+        noteId
+      },
+      include: {
+        user: { select: { id: true, name: true, avatarUrl: true } }
+      }
+    });
+
+    res.status(201).json({ message: 'Comment added', comment });
+  } catch (error: any) {
+    console.error('Add Comment Error:', error);
+    res.status(500).json({ error: 'Internal server error' });
+  }
+};
+
+export const getComments = async (req: Request, res: Response): Promise<void> => {
+  try {
+    const noteId = req.params.id as string;
+    const comments = await prisma.comment.findMany({
+      where: { noteId },
+      include: {
+        user: { select: { id: true, name: true, avatarUrl: true } }
+      },
+      orderBy: { createdAt: 'desc' }
+    });
+
+    res.json({ data: comments });
+  } catch (error: any) {
+    res.status(500).json({ error: 'Internal server error' });
+  }
+};
+
+export const summarizeNote = async (req: AuthRequest, res: Response): Promise<void> => {
+  try {
+    const id = req.params.id as string;
+    const userId = req.user?.userId;
+
+    if (!userId) {
+      res.status(401).json({ error: 'Unauthorized' });
+      return;
+    }
+
+    const note = await prisma.note.findUnique({
+      where: { id }
+    });
+
+    if (!note) {
+      res.status(404).json({ error: 'Note not found' });
+      return;
+    }
+
+    // Check if summary is already cached
+    if (note.aiSummary) {
+      console.log(`[Note Controller] Returning cached AI summary for note: ${id}`);
+      res.json({ summary: note.aiSummary });
+      return;
+    }
+
+    // Otherwise, generate the summary using Gemini Service
+    console.log(`[Note Controller] Generating new AI summary for note: ${id}`);
+    const summary = await generateSummary(note.fileUrl, note.mimeType);
+
+    // Cache the summary in the database
+    await prisma.note.update({
+      where: { id },
+      data: { aiSummary: summary }
+    });
+
+    res.json({ summary });
+  } catch (error: any) {
+    console.error('AI Summarization Error:', error);
+    res.status(500).json({ error: 'Failed to generate summary', details: error.message });
   }
 };

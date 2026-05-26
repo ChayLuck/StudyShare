@@ -19,17 +19,32 @@ export const toggleFavorite = async (req: AuthRequest, res: Response): Promise<v
       }
     });
 
+    // Get the note owner to update their points
+    const note = await prisma.note.findUnique({ where: { id: noteId }, select: { userId: true } });
+
     if (existing) {
       // Unfavorite
       await prisma.noteFavorite.delete({
         where: { id: existing.id }
       });
+      if (note && note.userId !== userId) { // Don't subtract points if user favorited their own note
+        await prisma.user.update({
+          where: { id: note.userId },
+          data: { points: { decrement: 5 } }
+        });
+      }
       res.json({ favorited: false, message: 'Removed from favorites' });
     } else {
       // Favorite
       await prisma.noteFavorite.create({
         data: { userId, noteId }
       });
+      if (note && note.userId !== userId) { // Don't add points if user favorited their own note
+        await prisma.user.update({
+          where: { id: note.userId },
+          data: { points: { increment: 5 } }
+        });
+      }
       res.json({ favorited: true, message: 'Added to favorites' });
     }
   } catch (error) {
@@ -51,7 +66,7 @@ export const getFavorites = async (req: AuthRequest, res: Response): Promise<voi
       include: {
         note: {
           include: {
-            user: { select: { email: true } }
+            user: { select: { email: true, name: true, avatarUrl: true } }
           }
         }
       },

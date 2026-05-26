@@ -46,9 +46,17 @@ export const ThemeProvider: React.FC<{ children: React.ReactNode }> = ({ childre
   }, []);
 
   const loadTheme = async () => {
-    const savedTheme = await SecureStore.getItemAsync('userTheme');
-    if (savedTheme === 'dark' || savedTheme === 'light') {
-      setTheme(savedTheme);
+    try {
+      console.log('[Theme] Loading theme...');
+      const savedTheme = await SecureStore.getItemAsync('userTheme');
+      if (savedTheme === 'dark' || savedTheme === 'light') {
+        setTheme(savedTheme);
+        console.log('[Theme] Loaded theme:', savedTheme);
+      } else {
+        console.log('[Theme] No saved theme, using default (light)');
+      }
+    } catch (e) {
+      console.error('[Theme] Failed to load theme:', e);
     }
   };
 

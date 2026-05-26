@@ -1,12 +1,56 @@
-import React, { useState } from 'react';
-import { View, Text, TextInput, TouchableOpacity, StyleSheet, Alert, KeyboardAvoidingView, Platform, SafeAreaView } from 'react-native';
+import React, { useState, useEffect, useRef } from 'react';
+import { View, Text, TextInput, TouchableOpacity, StyleSheet, Alert, KeyboardAvoidingView, Platform, Animated, Dimensions } from 'react-native';
+import { SafeAreaView } from 'react-native-safe-area-context';
 import api from '../services/api';
-import * as SecureStore from 'expo-secure-store';
+import { useTheme } from '../context/ThemeContext';
+import { useAuth } from '../context/AuthContext';
+
+const { width, height } = Dimensions.get('window');
+
+const AnimatedBlob = ({ color, size, startPos, duration }: any) => {
+  const animX = useRef(new Animated.Value(startPos.x)).current;
+  const animY = useRef(new Animated.Value(startPos.y)).current;
+
+  useEffect(() => {
+    const animate = () => {
+      Animated.parallel([
+        Animated.timing(animX, {
+          toValue: Math.random() * width,
+          duration: duration,
+          useNativeDriver: true,
+        }),
+        Animated.timing(animY, {
+          toValue: Math.random() * height,
+          duration: duration,
+          useNativeDriver: true,
+        }),
+      ]).start(() => animate()); // Loop continuously
+    };
+    animate();
+  }, []);
+
+  return (
+    <Animated.View
+      style={{
+        position: 'absolute',
+        width: size,
+        height: size,
+        borderRadius: size / 2,
+        backgroundColor: color,
+        opacity: 0.3, // Soft look
+        transform: [{ translateX: animX }, { translateY: animY }],
+      }}
+    />
+  );
+};
 
 export default function AuthScreen({ navigation }: any) {
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
+  const [name, setName] = useState('');
   const [isLogin, setIsLogin] = useState(true);
+  const { colors, isDark } = useTheme();
+  const { login } = useAuth();
 
   const handleSubmit = async () => {
     if (!email || !password) {
@@ -14,52 +58,83 @@ export default function AuthScreen({ navigation }: any) {
     }
     
     try {
+      console.log('[AuthScreen] Starting login/register attempt');
       if (isLogin) {
+        console.log('[AuthScreen] Posting to /auth/login with email:', email);
         const response = await api.post('/auth/login', { email, password });
-        await SecureStore.setItemAsync('accessToken', response.data.accessToken);
-        if (response.data.user && response.data.user.role) {
-           await SecureStore.setItemAsync('userRole', response.data.user.role);
+        console.log('[AuthScreen] Login response:', response.data);
+        if (response.data.user) {
+          await login(
+            response.data.accessToken, 
+            response.data.refreshToken,
+            response.data.user.id, 
+            response.data.user.role || ''
+          );
+          Alert.alert('Welcome Back', 'Logged in successfully!');
         } else {
-           await SecureStore.deleteItemAsync('userRole'); 
+           throw new Error('User data missing');
         }
-        Alert.alert('Welcome Back', 'Logged in successfully!');
-        navigation.replace('Home');
       } else {
-        await api.post('/auth/register', { email, password });
+        await api.post('/auth/register', { email, password, name });
         Alert.alert('Success', 'Registered! Check your email to verify.');
-        setIsLogin(true); // Switch to login screen after successful registration
+        setIsLogin(true);
       }
     } catch (e: any) {
-      Alert.alert('Error', e.response?.data?.error || 'Something went wrong');
+      console.error('[AuthScreen] Auth error:', {
+        message: e.message,
+        response: e.response?.data,
+        status: e.response?.status,
+        code: e.code,
+        isAxiosError: e.isAxiosError
+      });
+      const errorMsg = e.response?.data?.error || e.message || 'Something went wrong';
+      Alert.alert('Error', errorMsg);
     }
   };
 
   return (
-    <SafeAreaView style={styles.safeArea}>
+    <SafeAreaView style={[styles.safeArea, { backgroundColor: colors.background }]}>
+      {/* Animated Soft Background */}
+      <View style={StyleSheet.absoluteFillObject}>
+        <AnimatedBlob color={isDark ? '#4F46E5' : '#818cf8'} size={250} startPos={{ x: -50, y: -50 }} duration={15000} />
+        <AnimatedBlob color={isDark ? '#9333EA' : '#c084fc'} size={300} startPos={{ x: width - 100, y: height / 4 }} duration={18000} />
+        <AnimatedBlob color={isDark ? '#2563EB' : '#60a5fa'} size={200} startPos={{ x: width / 2, y: height - 100 }} duration={12000} />
+      </View>
+
       <KeyboardAvoidingView 
         behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
         style={styles.container}
       >
-        <View style={styles.card}>
-          <Text style={styles.title}>{isLogin ? 'Welcome Back' : 'Create Account'}</Text>
-          <Text style={styles.subtitle}>
+        <View style={[styles.card, { backgroundColor: colors.card, shadowColor: isDark ? '#fff' : '#000' }]}>
+          <Text style={[styles.title, { color: colors.text }]}>{isLogin ? 'Welcome Back' : 'Create Account'}</Text>
+          <Text style={[styles.subtitle, { color: colors.textSecondary }]}>
             {isLogin ? 'Sign in to continue to StudyShare' : 'Sign up to start sharing notes'}
           </Text>
 
           <View style={styles.inputContainer}>
+            {!isLogin && (
+              <TextInput
+                style={[styles.input, { backgroundColor: isDark ? '#374151' : '#f3f4f6', borderColor: colors.border, color: colors.text }]}
+                placeholder="Full Name"
+                placeholderTextColor={colors.textSecondary}
+                value={name}
+                onChangeText={setName}
+                autoCapitalize="words"
+              />
+            )}
             <TextInput
-              style={styles.input}
+              style={[styles.input, { backgroundColor: isDark ? '#374151' : '#f3f4f6', borderColor: colors.border, color: colors.text }]}
               placeholder="Email address"
-              placeholderTextColor="#9ca3af"
+              placeholderTextColor={colors.textSecondary}
               value={email}
               onChangeText={setEmail}
               autoCapitalize="none"
               keyboardType="email-address"
             />
             <TextInput
-              style={styles.input}
+              style={[styles.input, { backgroundColor: isDark ? '#374151' : '#f3f4f6', borderColor: colors.border, color: colors.text }]}
               placeholder="Password"
-              placeholderTextColor="#9ca3af"
+              placeholderTextColor={colors.textSecondary}
               secureTextEntry
               value={password}
               onChangeText={setPassword}
@@ -71,7 +146,7 @@ export default function AuthScreen({ navigation }: any) {
           </TouchableOpacity>
 
           <View style={styles.footerRow}>
-            <Text style={styles.footerText}>
+            <Text style={[styles.footerText, { color: colors.textSecondary }]}>
               {isLogin ? "Don't have an account? " : "Already have an account? "}
             </Text>
             <TouchableOpacity onPress={() => setIsLogin(!isLogin)}>
@@ -87,7 +162,6 @@ export default function AuthScreen({ navigation }: any) {
 const styles = StyleSheet.create({
   safeArea: { 
     flex: 1, 
-    backgroundColor: '#F9FAFB' 
   },
   container: { 
     flex: 1, 
@@ -95,10 +169,8 @@ const styles = StyleSheet.create({
     paddingHorizontal: 20 
   },
   card: { 
-    backgroundColor: '#fff', 
     padding: 24, 
     borderRadius: 16, 
-    shadowColor: '#000', 
     shadowOffset: { width: 0, height: 4 }, 
     shadowOpacity: 0.1, 
     shadowRadius: 10, 
@@ -107,13 +179,11 @@ const styles = StyleSheet.create({
   title: { 
     fontSize: 28, 
     fontWeight: '800', 
-    color: '#1f2937', 
     textAlign: 'center', 
     marginBottom: 8 
   },
   subtitle: { 
     fontSize: 15, 
-    color: '#6b7280', 
     textAlign: 'center', 
     marginBottom: 32 
   },
@@ -121,15 +191,12 @@ const styles = StyleSheet.create({
     marginBottom: 24 
   },
   input: { 
-    backgroundColor: '#f3f4f6', 
     borderWidth: 1, 
-    borderColor: '#e5e7eb', 
     paddingHorizontal: 16, 
     paddingVertical: 14, 
     marginBottom: 16, 
     borderRadius: 8, 
     fontSize: 16, 
-    color: '#1f2937' 
   },
   primaryButton: { 
     backgroundColor: '#4F46E5', 
@@ -154,7 +221,6 @@ const styles = StyleSheet.create({
     marginTop: 24 
   },
   footerText: { 
-    color: '#6b7280', 
     fontSize: 15 
   },
   footerLink: { 
@@ -163,3 +229,4 @@ const styles = StyleSheet.create({
     fontWeight: 'bold' 
   }
 });
+

@@ -10,13 +10,51 @@ model User {
   id              String         @id @default(uuid())
   email           String         @unique
   password        String
+  name            String?
+  university      String?
+  avatarUrl       String?
   role            Role           @default(USER)
   isEmailVerified Boolean        @default(false)
+  points          Int            @default(0)
+  pomodoroMinutes Int            @default(0)
   createdAt       DateTime       @default(now())
   updatedAt       DateTime       @updatedAt
   notes           Note[]
   favoriteNotes   NoteFavorite[]
   reports         Report[]
+  comments        Comment[]
+  questions       Question[]
+  answers         Answer[]
+}
+
+model Question {
+  id          String   @id @default(uuid())
+  content     String
+  fileUrl     String?
+  fileType    String?  // 'pdf' | 'image' | 'text'
+  course      String
+  topic       String
+  userId      String
+  user        User     @relation(fields: [userId], references: [id])
+  answers     Answer[]
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+  isResolved  Boolean  @default(false)
+}
+
+model Answer {
+  id          String   @id @default(uuid())
+  content     String
+  fileUrl     String?
+  fileType    String?
+  userId      String
+  user        User     @relation(fields: [userId], references: [id])
+  questionId  String
+  question    Question @relation(fields: [questionId], references: [id], onDelete: Cascade)
+  isCorrect   Boolean  @default(false)
+  isSpam      Boolean  @default(false)
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
 }
 
 model Note {
@@ -27,6 +65,7 @@ model Note {
   fileUrl     String
   fileSize    Int
   mimeType    String
+  aiSummary   String?
   userId      String
   isHidden    Boolean        @default(false)
   needsReview Boolean        @default(false)
@@ -36,6 +75,7 @@ model Note {
   user        User           @relation(fields: [userId], references: [id])
   favorites   NoteFavorite[]
   reports     Report[]
+  comments    Comment[]
 }
 
 model NoteFavorite {
@@ -58,6 +98,16 @@ model Report {
   user      User     @relation(fields: [userId], references: [id])
 
   @@unique([userId, noteId])
+}
+
+model Comment {
+  id        String   @id @default(uuid())
+  text      String
+  userId    String
+  noteId    String
+  createdAt DateTime @default(now())
+  user      User     @relation(fields: [userId], references: [id])
+  note      Note     @relation(fields: [noteId], references: [id])
 }
 
 enum Role {

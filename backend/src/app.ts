@@ -10,6 +10,8 @@ import noteRoutes from './routes/note.routes';
 import reportRoutes from './routes/report.routes';
 import adminRoutes from './routes/admin.routes';
 import favoriteRoutes from './routes/favorite.routes';
+import questionRoutes from './routes/question.routes';
+import answerRoutes from './routes/answer.routes';
 
 dotenv.config();
 console.log("DB URL:", process.env.DATABASE_URL); // ← ekle
@@ -36,6 +38,8 @@ app.use('/api/notes', noteRoutes);
 app.use('/api/reports', reportRoutes);
 app.use('/api/admin', adminRoutes);
 app.use('/api/favorites', favoriteRoutes);
+app.use('/api/questions', questionRoutes);
+app.use('/api/answers', answerRoutes);
 
 app.get('/health', (req, res) => {
   res.json({ status: 'ok', timestamp: new Date() });
@@ -56,3 +60,5 @@ app.listen(PORT, async () => {
     console.error('ElasticSearch init failed:', e);
   }
 });
+
+// Triggering restart for Prisma Client update

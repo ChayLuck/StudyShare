@@ -1,10 +1,14 @@
 import React, { useState } from 'react';
-import { View, Text, TextInput, TouchableOpacity, StyleSheet, Alert, SafeAreaView, ScrollView, Platform } from 'react-native';
+import { View, Text, TextInput, TouchableOpacity, StyleSheet, Alert, ScrollView, Platform } from 'react-native';
+import { SafeAreaView } from 'react-native-safe-area-context';
 import * as DocumentPicker from 'expo-document-picker';
-import * as SecureStore from 'expo-secure-store';
 import api from '../services/api';
+import { useTheme } from '../context/ThemeContext';
+import { useAuth } from '../context/AuthContext';
 
 export default function UploadScreen({ navigation }: any) {
+  const { colors, isDark } = useTheme();
+  const { accessToken } = useAuth();
   const [courseName, setCourseName] = useState('');
   const [schoolName, setSchoolName] = useState('');
   const [description, setDescription] = useState('');
@@ -61,22 +65,11 @@ export default function UploadScreen({ navigation }: any) {
     } as any);
 
     try {
-      const token = await SecureStore.getItemAsync('accessToken');
-      const apiBase = api.defaults.baseURL || 'http://localhost:4000/api';
-      
-      const response = await fetch(`${apiBase}/notes`, {
-        method: 'POST',
+      const response = await api.post('/notes', formData, {
         headers: {
-          'Authorization': `Bearer ${token}`
-          // Let fetch automatically set the Content-Type boundary for multipart/form-data
+          'Content-Type': 'multipart/form-data',
         },
-        body: formData,
       });
-
-      if (!response.ok) {
-        const err = await response.json();
-        throw new Error(err.error || 'Failed to upload');
-      }
 
       Alert.alert('Success', 'Note uploaded successfully!');
       navigation.goBack();
@@ -88,23 +81,23 @@ export default function UploadScreen({ navigation }: any) {
   };
 
   return (
-    <SafeAreaView style={styles.safeArea}>
-      <View style={styles.header}>
+    <SafeAreaView style={[styles.safeArea, { backgroundColor: colors.background }]}>
+      <View style={[styles.header, { backgroundColor: colors.card, borderBottomColor: colors.border }]}>
         <TouchableOpacity style={styles.backButton} onPress={() => navigation.goBack()}>
-          <Text style={styles.backIcon}>←</Text>
+          <Text style={[styles.backIcon, { color: colors.text }]}>←</Text>
         </TouchableOpacity>
-        <Text style={styles.headerTitle}>Upload Note</Text>
+        <Text style={[styles.headerTitle, { color: colors.text }]}>Upload Note</Text>
         <View style={{ width: 40 }} />
       </View>
 
       <ScrollView contentContainerStyle={styles.container} keyboardShouldPersistTaps="handled">
         
         <View style={styles.inputGroup}>
-          <Text style={styles.label}>School Name</Text>
+          <Text style={[styles.label, { color: colors.text }]}>School Name</Text>
           <TextInput
-            style={styles.input}
+            style={[styles.input, { backgroundColor: colors.card, color: colors.text, borderColor: colors.border }]}
             placeholder="e.g. HARVARD UNIVERSITY"
-            placeholderTextColor="#9ca3af"
+            placeholderTextColor={colors.textSecondary}
             value={schoolName}
             onChangeText={(text) => {
               const val = text.toUpperCase();
@@ -117,18 +110,26 @@ export default function UploadScreen({ navigation }: any) {
             {UNIVERSITIES.map(u => (
               <TouchableOpacity 
                 key={u} 
-                style={[styles.chip, schoolName === u && styles.activeChip]} 
+                style={[
+                  styles.chip, 
+                  { backgroundColor: colors.card, borderColor: colors.border },
+                  schoolName === u && { backgroundColor: colors.primary, borderColor: colors.primary }
+                ]} 
                 onPress={() => setSchoolName(u)}
               >
-                <Text style={[styles.chipText, schoolName === u && styles.activeChipText]}>{u}</Text>
+                <Text style={[styles.chipText, { color: colors.textSecondary }, schoolName === u && { color: '#fff' }]}>{u}</Text>
               </TouchableOpacity>
             ))}
           </ScrollView>
           {schoolSuggestions.length > 0 && (
-            <View style={styles.suggestionsContainer}>
+            <View style={[styles.suggestionsContainer, { backgroundColor: colors.card, borderColor: colors.border }]}>
               {schoolSuggestions.map(s => (
-                <TouchableOpacity key={s} style={styles.suggestionItem} onPress={() => { setSchoolName(s); setSchoolSuggestions([]); }}>
-                  <Text style={styles.suggestionText}>{s}</Text>
+                <TouchableOpacity 
+                  key={s} 
+                  style={[styles.suggestionItem, { borderBottomColor: colors.divider }]} 
+                  onPress={() => { setSchoolName(s); setSchoolSuggestions([]); }}
+                >
+                  <Text style={[styles.suggestionText, { color: colors.primary }]}>{s}</Text>
                 </TouchableOpacity>
               ))}
             </View>
@@ -136,11 +137,11 @@ export default function UploadScreen({ navigation }: any) {
         </View>
 
         <View style={styles.inputGroup}>
-          <Text style={styles.label}>Course Name</Text>
+          <Text style={[styles.label, { color: colors.text }]}>Course Name</Text>
           <TextInput
-            style={styles.input}
+            style={[styles.input, { backgroundColor: colors.card, color: colors.text, borderColor: colors.border }]}
             placeholder="e.g. CS50"
-            placeholderTextColor="#9ca3af"
+            placeholderTextColor={colors.textSecondary}
             value={courseName}
             onChangeText={(text) => {
               const val = text.toUpperCase();
@@ -150,10 +151,14 @@ export default function UploadScreen({ navigation }: any) {
             autoCapitalize="characters"
           />
           {courseSuggestions.length > 0 && (
-            <View style={styles.suggestionsContainer}>
+            <View style={[styles.suggestionsContainer, { backgroundColor: colors.card, borderColor: colors.border }]}>
               {courseSuggestions.map(s => (
-                <TouchableOpacity key={s} style={styles.suggestionItem} onPress={() => { setCourseName(s); setCourseSuggestions([]); }}>
-                  <Text style={styles.suggestionText}>{s}</Text>
+                <TouchableOpacity 
+                  key={s} 
+                  style={[styles.suggestionItem, { borderBottomColor: colors.divider }]} 
+                  onPress={() => { setCourseName(s); setCourseSuggestions([]); }}
+                >
+                  <Text style={[styles.suggestionText, { color: colors.primary }]}>{s}</Text>
                 </TouchableOpacity>
               ))}
             </View>
@@ -161,11 +166,11 @@ export default function UploadScreen({ navigation }: any) {
         </View>
 
         <View style={styles.inputGroup}>
-          <Text style={styles.label}>Description (Optional)</Text>
+          <Text style={[styles.label, { color: colors.text }]}>Description (Optional)</Text>
           <TextInput
-            style={[styles.input, styles.textArea]}
+            style={[styles.input, styles.textArea, { backgroundColor: colors.card, color: colors.text, borderColor: colors.border }]}
             placeholder="What is this note about?"
-            placeholderTextColor="#9ca3af"
+            placeholderTextColor={colors.textSecondary}
             value={description}
             onChangeText={setDescription}
             multiline
@@ -175,19 +180,25 @@ export default function UploadScreen({ navigation }: any) {
         </View>
 
         <View style={styles.inputGroup}>
-          <Text style={styles.label}>Attachment</Text>
-          <TouchableOpacity style={styles.fileBox} onPress={pickFile}>
-            <View style={styles.fileIconPlaceholder}>
+          <Text style={[styles.label, { color: colors.text }]}>Attachment</Text>
+          <TouchableOpacity 
+            style={[
+              styles.fileBox, 
+              { backgroundColor: isDark ? colors.card : '#EEF2FF', borderColor: colors.primary }
+            ]} 
+            onPress={pickFile}
+          >
+            <View style={[styles.fileIconPlaceholder, { backgroundColor: colors.background }]}>
               <Text style={styles.fileIconText}>{file ? '📄' : '📁'}</Text>
             </View>
-            <Text style={styles.fileBoxText}>
+            <Text style={[styles.fileBoxText, { color: colors.primary }]}>
               {file ? file.name : 'Tap to select PDF or Image'}
             </Text>
           </TouchableOpacity>
         </View>
 
         <TouchableOpacity 
-          style={[styles.uploadButton, loading && styles.uploadButtonDisabled]} 
+          style={[styles.uploadButton, { backgroundColor: colors.primary }, loading && styles.uploadButtonDisabled]} 
           onPress={handleUpload}
           disabled={loading}
         >
@@ -202,42 +213,31 @@ export default function UploadScreen({ navigation }: any) {
 }
 
 const styles = StyleSheet.create({
-  safeArea: { flex: 1, backgroundColor: '#F9FAFB' },
+  safeArea: { flex: 1 },
   header: {
     flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'space-between',
     paddingHorizontal: 15,
     paddingVertical: 15,
-    backgroundColor: '#fff',
     borderBottomWidth: 1,
-    borderBottomColor: '#f3f4f6',
   },
   backButton: { padding: 5 },
-  backIcon: { fontSize: 24, color: '#374151', fontWeight: 'bold' },
-  headerTitle: { fontSize: 18, fontWeight: '700', color: '#1f2937' },
+  backIcon: { fontSize: 24, fontWeight: 'bold' },
+  headerTitle: { fontSize: 18, fontWeight: '700' },
   container: { padding: 20 },
   inputGroup: { marginBottom: 20 },
-  label: { fontSize: 14, fontWeight: '600', color: '#374151', marginBottom: 8 },
+  label: { fontSize: 14, fontWeight: '600', marginBottom: 8 },
   input: {
-    backgroundColor: '#fff',
     borderWidth: 1,
-    borderColor: '#e5e7eb',
     paddingHorizontal: 15,
     paddingVertical: 12,
     borderRadius: 8,
     fontSize: 15,
-    color: '#1f2937',
-    ...Platform.select({
-      ios: { shadowColor: '#000', shadowOffset: { width: 0, height: 1 }, shadowOpacity: 0.05, shadowRadius: 2 },
-      android: { elevation: 1 }
-    })
   },
   textArea: { height: 100 },
   suggestionsContainer: {
-    backgroundColor: '#fff',
     borderWidth: 1,
-    borderColor: '#e5e7eb',
     borderTopWidth: 0,
     borderBottomLeftRadius: 8,
     borderBottomRightRadius: 8,
@@ -247,13 +247,10 @@ const styles = StyleSheet.create({
   suggestionItem: {
     padding: 12,
     borderBottomWidth: 1,
-    borderBottomColor: '#f3f4f6'
   },
-  suggestionText: { color: '#4F46E5', fontWeight: '600' },
+  suggestionText: { fontWeight: '600' },
   fileBox: {
-    backgroundColor: '#EEF2FF',
     borderWidth: 2,
-    borderColor: '#C7D2FE',
     borderStyle: 'dashed',
     borderRadius: 12,
     padding: 30,
@@ -261,14 +258,13 @@ const styles = StyleSheet.create({
     justifyContent: 'center'
   },
   fileIconPlaceholder: {
-    backgroundColor: '#fff',
     width: 50,
     height: 50,
     borderRadius: 25,
     justifyContent: 'center',
     alignItems: 'center',
     marginBottom: 10,
-    shadowColor: '#4F46E5',
+    shadowColor: '#000',
     shadowOffset: { width: 0, height: 2 },
     shadowOpacity: 0.1,
     shadowRadius: 4,
@@ -276,48 +272,36 @@ const styles = StyleSheet.create({
   },
   fileIconText: { fontSize: 24 },
   fileBoxText: {
-    color: '#4F46E5',
     fontSize: 14,
     fontWeight: '600',
     textAlign: 'center'
   },
   uploadButton: {
-    backgroundColor: '#4F46E5',
     paddingVertical: 16,
     borderRadius: 8,
     alignItems: 'center',
     marginTop: 10,
-    shadowColor: '#4F46E5',
+    shadowColor: '#000',
     shadowOffset: { width: 0, height: 4 },
     shadowOpacity: 0.3,
     shadowRadius: 8,
     elevation: 4
   },
-  uploadButtonDisabled: { backgroundColor: '#818CF8' },
+  uploadButtonDisabled: { opacity: 0.6 },
   uploadButtonText: { color: '#fff', fontSize: 16, fontWeight: 'bold' },
   chipContainer: {
     marginTop: 10,
     flexDirection: 'row',
   },
   chip: {
-    backgroundColor: '#fff',
     borderWidth: 1,
-    borderColor: '#e5e7eb',
     paddingHorizontal: 12,
     paddingVertical: 6,
     borderRadius: 16,
     marginRight: 8,
   },
-  activeChip: {
-    backgroundColor: '#4F46E5',
-    borderColor: '#4F46E5',
-  },
   chipText: {
     fontSize: 12,
-    color: '#6b7280',
     fontWeight: '600',
-  },
-  activeChipText: {
-    color: '#fff',
   }
 });

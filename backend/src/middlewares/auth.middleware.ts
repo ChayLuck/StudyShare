@@ -31,6 +31,7 @@ export const requireAuth = (req: AuthRequest, res: Response, next: NextFunction)
   }
   
   const token = authHeader.split(' ')[1];
+  console.log('DEBUG: Received token =', token?.substring(0, 10) + '...');
   if (!token) {
     res.status(401).json({ error: 'Invalid token format' });
     return;
