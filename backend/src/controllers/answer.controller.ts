@@ -175,10 +175,12 @@ export const deleteAnswer = async (req: any, res: Response): Promise<void> => {
     await prisma.answer.delete({ where: { id } });
     
     // Decrement user points (-5 for deleted answer)
-    await prisma.user.update({
-      where: { id: answer.userId },
-      data: { points: { decrement: 5 } }
-    });
+    if (answer.userId) {
+      await prisma.user.update({
+        where: { id: answer.userId },
+        data: { points: { decrement: 5 } }
+      });
+    }
     
     // Update question resolved status after deletion
     const correctAnswersCount = await prisma.answer.count({

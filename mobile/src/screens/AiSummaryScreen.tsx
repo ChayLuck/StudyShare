@@ -70,10 +70,10 @@ export default function AiSummaryScreen({ route, navigation }: any) {
       });
 
       return (
-        <Text 
-          key={lineIndex} 
+        <Text
+          key={lineIndex}
           style={[
-            styles.aiSummaryText, 
+            styles.aiSummaryText,
             { color: colors.text },
             isBullet && { paddingLeft: 10 }
           ]}
@@ -104,16 +104,16 @@ export default function AiSummaryScreen({ route, navigation }: any) {
               <Text style={[styles.aiTitle, { color: colors.text }]}>AI Summary</Text>
             </View>
             {summary && (
-              <TouchableOpacity 
-                style={[styles.copyButton, { backgroundColor: colors.chip }]} 
+              <TouchableOpacity
+                style={[styles.copyButton, { backgroundColor: colors.chip }]}
                 onPress={handleCopySummary}
                 activeOpacity={0.7}
               >
-                <Ionicons 
-                  name={copied ? "checkmark" : "copy-outline"} 
-                  size={16} 
-                  color={copied ? "#10B981" : colors.primary} 
-                  style={{ marginRight: 4 }} 
+                <Ionicons
+                  name={copied ? "checkmark" : "copy-outline"}
+                  size={16}
+                  color={copied ? "#10B981" : colors.primary}
+                  style={{ marginRight: 4 }}
                 />
                 <Text style={[styles.copyButtonText, { color: copied ? "#10B981" : colors.primary }]}>
                   {copied ? 'Copied' : 'Copy'}
@@ -140,7 +140,7 @@ export default function AiSummaryScreen({ route, navigation }: any) {
               <Text style={[styles.aiEmptyText, { color: colors.textSecondary }]}>
                 This note has not been summarized yet. Tap the button below to generate a comprehensive AI summary!
               </Text>
-              <TouchableOpacity 
+              <TouchableOpacity
                 style={[styles.aiSummarizeButton, { backgroundColor: colors.primary }]}
                 onPress={handleSummarize}
                 activeOpacity={0.9}
@@ -151,6 +151,32 @@ export default function AiSummaryScreen({ route, navigation }: any) {
             </View>
           )}
         </View>
+
+        {/* Bilgi Kartları (Flashcards) Section */}
+        <View style={[styles.aiSummaryContainer, { backgroundColor: colors.card, borderColor: colors.border, marginTop: 15 }]}>
+          <View style={styles.aiHeaderRow}>
+            <View style={styles.aiTitleRow}>
+              <Ionicons name="albums" size={20} style={{ marginRight: 6 }} color="#F97316" />
+              <Text style={[styles.aiTitle, { color: colors.text }]}>Flashcards</Text>
+            </View>
+          </View>
+          <View style={[styles.aiDivider, { backgroundColor: colors.border }]} />
+
+          <View style={styles.aiEmptyContainer}>
+            <Text style={[styles.aiEmptyText, { color: colors.textSecondary }]}>
+              You can generate and study Q&A flashcards from this note using AI.
+            </Text>
+            <TouchableOpacity
+              style={[styles.aiSummarizeButton, { backgroundColor: '#F97316' }]}
+              onPress={() => navigation.navigate('Flashcard', { noteId: note.id })}
+              activeOpacity={0.9}
+            >
+              <Ionicons name="albums-outline" size={20} color="#fff" style={{ marginRight: 8 }} />
+              <Text style={styles.aiSummarizeButtonText}>Study with Flashcards</Text>
+            </TouchableOpacity>
+          </View>
+        </View>
+
       </ScrollView>
     </SafeAreaView>
   );

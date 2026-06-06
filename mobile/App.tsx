@@ -25,6 +25,7 @@ import NoteDetailScreen from './src/screens/NoteDetailScreen';
 import QuestionDetailScreen from './src/screens/QuestionDetailScreen';
 import PomodoroScreen from './src/screens/PomodoroScreen';
 import AiSummaryScreen from './src/screens/AiSummaryScreen';
+import FlashcardScreen from './src/screens/FlashcardScreen';
 
 import { ThemeProvider, useTheme } from './src/context/ThemeContext';
 import { AuthProvider, useAuth } from './src/context/AuthContext';
@@ -102,6 +103,7 @@ function AppContent() {
             <Stack.Screen name="QuestionDetail" component={QuestionDetailScreen} />
             <Stack.Screen name="UserQuestions" component={QuestionsScreen} />
             <Stack.Screen name="AiSummary" component={AiSummaryScreen} />
+            <Stack.Screen name="Flashcard" component={FlashcardScreen} />
           </>
         )}
       </Stack.Navigator>

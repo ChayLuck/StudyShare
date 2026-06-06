@@ -22,12 +22,19 @@ export const toggleFavorite = async (req: AuthRequest, res: Response): Promise<v
     // Get the note owner to update their points
     const note = await prisma.note.findUnique({ where: { id: noteId }, select: { userId: true } });
 
+    const user = await prisma.user.findUnique({ where: { id: userId } });
+    if (!user) {
+      res.status(404).json({ error: 'User not found' });
+      return;
+    }
+
+    // Toggle logic
     if (existing) {
       // Unfavorite
       await prisma.noteFavorite.delete({
         where: { id: existing.id }
       });
-      if (note && note.userId !== userId) { // Don't subtract points if user favorited their own note
+      if (note && note.userId && note.userId !== userId) { // Don't subtract points if user favorited their own note
         await prisma.user.update({
           where: { id: note.userId },
           data: { points: { decrement: 5 } }
@@ -39,7 +46,7 @@ export const toggleFavorite = async (req: AuthRequest, res: Response): Promise<v
       await prisma.noteFavorite.create({
         data: { userId, noteId }
       });
-      if (note && note.userId !== userId) { // Don't add points if user favorited their own note
+      if (note && note.userId && note.userId !== userId) { // Don't add points if user favorited their own note
         await prisma.user.update({
           where: { id: note.userId },
           data: { points: { increment: 5 } }
