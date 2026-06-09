@@ -15,7 +15,8 @@ export const uploadNote = async (req: AuthRequest, res: Response): Promise<void>
       return;
     }
 
-    const { courseName, schoolName, description } = req.body;
+    const { courseName, schoolName, description, isPrivate } = req.body;
+    const isPrivateBool = isPrivate === 'true' || isPrivate === true;
     const file = req.file;
 
     if (!file) {
@@ -53,13 +54,16 @@ export const uploadNote = async (req: AuthRequest, res: Response): Promise<void>
         fileUrl,
         fileSize: file.size,
         mimeType: file.mimetype,
-        userId
+        userId,
+        isPrivate: isPrivateBool
       }
     });
 
-    // Background index to ElasticSearch
-    indexMetadata('course', upperCourseName);
-    indexMetadata('school', upperSchoolName);
+    if (!isPrivateBool) {
+      // Background index to ElasticSearch
+      indexMetadata('course', upperCourseName);
+      indexMetadata('school', upperSchoolName);
+    }
 
     // Update user points (+10 for uploading)
     await prisma.user.update({
@@ -82,7 +86,7 @@ export const getNotes = async (req: AuthRequest, res: Response): Promise<void> =
     const limit = parseInt(limitQuery as string) || 10;
     const skip = (page - 1) * limit;
 
-    const where: any = { isHidden: false };
+    const where: any = { isHidden: false, isPrivate: false };
 
     // School filter from chips
     if (school && school !== 'ALL') {
@@ -257,6 +261,26 @@ export const addComment = async (req: AuthRequest, res: Response): Promise<void>
       }
     });
 
+    try {
+      const note = await prisma.note.findUnique({
+        where: { id: noteId },
+        select: { userId: true }
+      });
+
+      if (note && note.userId && note.userId !== userId) {
+        await prisma.notification.create({
+          data: {
+            userId: note.userId,
+            senderId: userId,
+            type: 'COMMENT',
+            noteId: noteId
+          }
+        });
+      }
+    } catch (notifError) {
+      console.error('Failed to create notification:', notifError);
+    }
+
     res.status(201).json({ message: 'Comment added', comment });
   } catch (error: any) {
     console.error('Add Comment Error:', error);
@@ -297,6 +321,11 @@ export const summarizeNote = async (req: AuthRequest, res: Response): Promise<vo
 
     if (!note) {
       res.status(404).json({ error: 'Note not found' });
+      return;
+    }
+
+    if (note.isPrivate && note.userId !== userId) {
+      res.status(403).json({ error: 'You do not have permission to access this note' });
       return;
     }
 

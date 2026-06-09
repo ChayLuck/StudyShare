@@ -248,12 +248,12 @@ export default function QuestionsScreen({ route, navigation }: any) {
   };
 
   return (
-    <SafeAreaView style={[styles.container, { backgroundColor: colors.background }]}>
+    <SafeAreaView style={[styles.container, { backgroundColor: colors.background }]} edges={['top', 'left', 'right']}>
       <View style={styles.header}>
         <View style={{ flexDirection: 'row', alignItems: 'center' }}>
           {(userIdFilter || answeredByMe) && (
             <TouchableOpacity onPress={() => navigation.goBack()} style={{ marginRight: 15 }}>
-              <Text style={{ fontSize: 24, color: colors.text }}>←</Text>
+              <Ionicons name="chevron-back" size={28} color={colors.text} />
             </TouchableOpacity>
           )}
           <Text style={[styles.headerTitle, { color: colors.text }]}>{getTitle()}</Text>

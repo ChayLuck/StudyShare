@@ -114,11 +114,11 @@ export default function FavoritesScreen({ navigation }: any) {
   );
 
   return (
-    <SafeAreaView style={[styles.safeArea, { backgroundColor: colors.background }]}>
+    <SafeAreaView style={[styles.safeArea, { backgroundColor: colors.background }]} edges={['top', 'left', 'right']}>
       <View style={styles.header}>
-        <TouchableOpacity onPress={() => navigation.goBack()} style={styles.backButton}>
+        {/* <TouchableOpacity onPress={() => navigation.goBack()} style={styles.backButton}>
           <Text style={[styles.backIcon, { color: colors.text }]}>←</Text>
-        </TouchableOpacity>
+        </TouchableOpacity> */}
         <Text style={[styles.headerTitle, { color: colors.text }]}>My Favorites</Text>
         <View style={{ width: 40 }} />
       </View>

@@ -26,6 +26,8 @@ model User {
   favoriteNotes     NoteFavorite[]
   questions         Question[]
   reports           Report[]
+  notifications     Notification[]      @relation("UserNotifications")
+  sentNotifications Notification[]      @relation("SenderNotifications")
 }
 
 model Question {
@@ -70,14 +72,16 @@ model Note {
   isHidden    Boolean        @default(false)
   needsReview Boolean        @default(false)
   isVerified  Boolean        @default(false)
+  isPrivate   Boolean        @default(false)
   createdAt   DateTime       @default(now())
   updatedAt   DateTime       @updatedAt
   aiSummary   String?
   comments    Comment[]
   flashcards  Flashcard[]
   user        User?          @relation(fields: [userId], references: [id])
-  favorites   NoteFavorite[]
-  reports     Report[]
+  favorites     NoteFavorite[]
+  reports       Report[]
+  notifications Notification[]
 }
 
 model NoteFavorite {
@@ -138,4 +142,18 @@ model FlashcardProgress {
 enum Role {
   USER
   ADMIN
+}
+
+model Notification {
+  id        String   @id @default(uuid())
+  userId    String   // Recipient (owner of the note)
+  senderId  String   // Actor (the commenter)
+  type      String   // "COMMENT"
+  noteId    String
+  isRead    Boolean  @default(false)
+  createdAt DateTime @default(now())
+
+  user   User @relation("UserNotifications", fields: [userId], references: [id], onDelete: Cascade)
+  sender User @relation("SenderNotifications", fields: [senderId], references: [id], onDelete: Cascade)
+  note   Note @relation(fields: [noteId], references: [id], onDelete: Cascade)
 }

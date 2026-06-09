@@ -380,6 +380,7 @@ export default function HomeScreen({ navigation }: any) {
   return (
     <SafeAreaView
       style={[styles.safeArea, { backgroundColor: colors.background }]}
+      edges={['top', 'left', 'right']}
     >
       {/* Custom Header */}
       <View style={styles.header}>

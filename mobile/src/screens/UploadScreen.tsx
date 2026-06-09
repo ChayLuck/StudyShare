@@ -5,8 +5,10 @@ import * as DocumentPicker from 'expo-document-picker';
 import api from '../services/api';
 import { useTheme } from '../context/ThemeContext';
 import { useAuth } from '../context/AuthContext';
+import { Ionicons } from '@expo/vector-icons';
 
-export default function UploadScreen({ navigation }: any) {
+export default function UploadScreen({ navigation, route }: any) {
+  const isPrivate = route.params?.isPrivate || false;
   const { colors, isDark } = useTheme();
   const { accessToken } = useAuth();
   const [courseName, setCourseName] = useState('');
@@ -57,6 +59,7 @@ export default function UploadScreen({ navigation }: any) {
     formData.append('courseName', courseName);
     formData.append('schoolName', schoolName);
     formData.append('description', description);
+    formData.append('isPrivate', String(isPrivate));
 
     formData.append('file', {
       uri: file.uri,
@@ -84,9 +87,11 @@ export default function UploadScreen({ navigation }: any) {
     <SafeAreaView style={[styles.safeArea, { backgroundColor: colors.background }]}>
       <View style={[styles.header, { backgroundColor: colors.card, borderBottomColor: colors.border }]}>
         <TouchableOpacity style={styles.backButton} onPress={() => navigation.goBack()}>
-          <Text style={[styles.backIcon, { color: colors.text }]}>←</Text>
+          <Ionicons name="chevron-back" size={28} color={colors.text} />
         </TouchableOpacity>
-        <Text style={[styles.headerTitle, { color: colors.text }]}>Upload Note</Text>
+        <Text style={[styles.headerTitle, { color: colors.text }]}>
+          {isPrivate ? 'Upload Private Note' : 'Upload Note'}
+        </Text>
         <View style={{ width: 40 }} />
       </View>
 
@@ -203,7 +208,7 @@ export default function UploadScreen({ navigation }: any) {
           disabled={loading}
         >
           <Text style={styles.uploadButtonText}>
-            {loading ? 'Uploading...' : 'Publish Note'}
+            {loading ? 'Uploading...' : isPrivate ? 'Upload Private Note' : 'Publish Note'}
           </Text>
         </TouchableOpacity>
 

@@ -13,6 +13,7 @@ import favoriteRoutes from './routes/favorite.routes';
 import questionRoutes from './routes/question.routes';
 import answerRoutes from './routes/answer.routes';
 import flashcardRoutes from './routes/flashcard.routes';
+import notificationRoutes from './routes/notification.routes';
 
 dotenv.config();
 console.log("DB URL:", process.env.DATABASE_URL); // ← ekle
@@ -42,6 +43,7 @@ app.use('/api/favorites', favoriteRoutes);
 app.use('/api/questions', questionRoutes);
 app.use('/api/answers', answerRoutes);
 app.use('/api/flashcards', flashcardRoutes);
+app.use('/api/notifications', notificationRoutes);
 
 app.get('/health', (req, res) => {
   res.json({ status: 'ok', timestamp: new Date() });

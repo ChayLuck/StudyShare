@@ -12,7 +12,7 @@ import {
   Platform,
   Alert
 } from 'react-native';
-import { SafeAreaView } from 'react-native-safe-area-context';
+import { SafeAreaView, useSafeAreaInsets } from 'react-native-safe-area-context';
 import { Ionicons } from '@expo/vector-icons';
 import api from '../services/api';
 import { useTheme } from '../context/ThemeContext';
@@ -22,6 +22,7 @@ export default function NoteDetailScreen({ route, navigation }: any) {
   const { note } = route.params;
   const { colors } = useTheme();
   const { isLoggedIn: isLogged } = useAuth();
+  const insets = useSafeAreaInsets();
 
   const [comments, setComments] = useState<any[]>([]);
   const [newComment, setNewComment] = useState('');
@@ -79,13 +80,12 @@ export default function NoteDetailScreen({ route, navigation }: any) {
   );
 
   return (
-    <View style={{ flex: 1, backgroundColor: colors.background }}>
+    <SafeAreaView style={[styles.container, { backgroundColor: colors.background }]} edges={['top', 'left', 'right']}>
       <KeyboardAvoidingView
         style={{ flex: 1 }}
         behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
-        keyboardVerticalOffset={Platform.OS === 'ios' ? 0 : 0}
+        keyboardVerticalOffset={0}
       >
-        <SafeAreaView style={[styles.container, { backgroundColor: colors.background }]}>
           {/* Header */}
           <View style={[styles.header, { backgroundColor: colors.card, borderBottomColor: colors.border }]}>
             <TouchableOpacity style={styles.backButton} onPress={() => navigation.goBack()}>
@@ -106,7 +106,7 @@ export default function NoteDetailScreen({ route, navigation }: any) {
                 <ActivityIndicator size="large" color={colors.primary} style={{ marginTop: 20 }} />
               ) : (
                 <View style={styles.emptyContainer}>
-                  <Text style={{ fontSize: 40, marginBottom: 10 }}>💬</Text>
+                  <Ionicons name="chatbubble-ellipses-outline" size={28} color={colors.text} />
                   <Text style={[styles.emptyText, { color: colors.textSecondary }]}>No comments yet.</Text>
                   <Text style={[styles.emptyText, { color: colors.textSecondary }]}>Be the first to share your thoughts!</Text>
                 </View>
@@ -114,7 +114,14 @@ export default function NoteDetailScreen({ route, navigation }: any) {
             }
           />
 
-          <View style={[styles.inputContainer, { backgroundColor: colors.card, borderTopColor: colors.border }]}>
+          <View style={[
+            styles.inputContainer,
+            {
+              backgroundColor: colors.card,
+              borderTopColor: colors.border,
+              paddingBottom: insets.bottom > 0 ? insets.bottom : 12
+            }
+          ]}>
             <TextInput
               style={[styles.input, { backgroundColor: colors.background, color: colors.text, borderColor: colors.border }]}
               placeholder={isLogged ? "Write a comment..." : "Log in to comment"}
@@ -132,9 +139,8 @@ export default function NoteDetailScreen({ route, navigation }: any) {
               <Text style={styles.sendButtonText}>Send</Text>
             </TouchableOpacity>
           </View>
-        </SafeAreaView>
       </KeyboardAvoidingView>
-    </View>
+    </SafeAreaView>
   );
 }
 

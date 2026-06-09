@@ -12,6 +12,7 @@ import { SafeAreaView } from 'react-native-safe-area-context';
 import api from '../services/api';
 import { useTheme } from '../context/ThemeContext';
 import { useAuth } from '../context/AuthContext';
+import { Ionicons } from '@expo/vector-icons';
 
 export default function LeaderboardScreen({ navigation }: any) {
   const { colors } = useTheme();
@@ -105,7 +106,7 @@ export default function LeaderboardScreen({ navigation }: any) {
     <SafeAreaView style={[styles.container, { backgroundColor: colors.background }]}>
       <View style={styles.header}>
         <TouchableOpacity style={{ flexDirection: 'row', alignItems: 'center' }} onPress={() => navigation.goBack()}>
-          <Text style={{ fontSize: 24, color: colors.text, marginRight: 10 }}>←</Text>
+<Ionicons name="chevron-back" size={28} color={colors.text} />
           <Text style={[styles.headerTitle, { color: colors.text }]}>Leaderboard</Text>
         </TouchableOpacity>
       </View>

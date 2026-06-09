@@ -1,9 +1,9 @@
 // StudyShare Mobile App
 import React from 'react';
-import { NavigationContainer } from '@react-navigation/native';
+import { NavigationContainer, createNavigationContainerRef } from '@react-navigation/native';
 import { createNativeStackNavigator } from '@react-navigation/native-stack';
 import { createBottomTabNavigator } from '@react-navigation/bottom-tabs';
-import { Text, View, ActivityIndicator } from 'react-native';
+import { Text, View, ActivityIndicator, TouchableOpacity } from 'react-native';
 import { StatusBar } from 'expo-status-bar';
 import { SafeAreaProvider, useSafeAreaInsets } from 'react-native-safe-area-context';
 
@@ -26,12 +26,16 @@ import QuestionDetailScreen from './src/screens/QuestionDetailScreen';
 import PomodoroScreen from './src/screens/PomodoroScreen';
 import AiSummaryScreen from './src/screens/AiSummaryScreen';
 import FlashcardScreen from './src/screens/FlashcardScreen';
+import MyNotesScreen from './src/screens/MyNotesScreen';
 
 import { ThemeProvider, useTheme } from './src/context/ThemeContext';
 import { AuthProvider, useAuth } from './src/context/AuthContext';
+import { NotificationProvider, useNotifications } from './src/context/NotificationContext';
 
 const Stack = createNativeStackNavigator();
 const Tab = createBottomTabNavigator();
+
+export const navigationRef = createNavigationContainerRef();
 
 function TabNavigator() {
   const { colors } = useTheme();
@@ -58,8 +62,10 @@ function TabNavigator() {
         tabBarInactiveTintColor: 'gray',
         tabBarStyle: {
           backgroundColor: colors.card,
-          borderTopColor: colors.border,
-          height: 60 + insets.bottom,
+          borderTopWidth: 0,
+          elevation: 0,
+          shadowOpacity: 0,
+          height: 50 + insets.bottom ,
           paddingBottom: insets.bottom > 0 ? insets.bottom : 8
         },
         headerShown: false
@@ -77,6 +83,7 @@ function TabNavigator() {
 function AppContent() {
   const { isDark, colors } = useTheme();
   const { isLoggedIn, isLoading } = useAuth();
+  const { showPopup, activePopupNotification, dismissPopup, markAsRead } = useNotifications();
 
   if (isLoading) {
     return (
@@ -87,8 +94,56 @@ function AppContent() {
   }
 
   return (
-    <NavigationContainer>
+    <NavigationContainer ref={navigationRef}>
       <StatusBar style={isDark ? 'light' : 'dark'} backgroundColor={colors.background} />
+      
+      {showPopup && activePopupNotification && (
+        <TouchableOpacity
+          activeOpacity={0.9}
+          style={{
+            position: 'absolute',
+            top: 50,
+            left: 15,
+            right: 15,
+            backgroundColor: colors.card,
+            padding: 15,
+            borderRadius: 12,
+            flexDirection: 'row',
+            alignItems: 'center',
+            shadowColor: '#000',
+            shadowOffset: { width: 0, height: 4 },
+            shadowOpacity: 0.15,
+            shadowRadius: 8,
+            elevation: 5,
+            zIndex: 9999,
+            borderLeftWidth: 4,
+            borderLeftColor: colors.primary
+          }}
+          onPress={() => {
+            const note = activePopupNotification.note;
+            const notifId = activePopupNotification.id;
+            dismissPopup();
+            markAsRead(notifId);
+            if (navigationRef.isReady()) {
+              (navigationRef.navigate as any)('NoteDetail', { note });
+            }
+          }}
+        >
+          <View style={{ marginRight: 12, backgroundColor: colors.primary + '15', padding: 8, borderRadius: 20 }}>
+            <Ionicons name="chatbubble-ellipses" size={24} color={colors.primary} />
+          </View>
+          <View style={{ flex: 1 }}>
+            <Text style={{ fontWeight: 'bold', color: colors.text, fontSize: 14 }}>New Comment</Text>
+            <Text style={{ color: colors.textSecondary, fontSize: 13 }} numberOfLines={1}>
+              {activePopupNotification.sender?.name || 'Someone'} commented on your note!
+            </Text>
+          </View>
+          <TouchableOpacity onPress={dismissPopup} style={{ padding: 4 }}>
+            <Ionicons name="close" size={20} color={colors.textSecondary} />
+          </TouchableOpacity>
+        </TouchableOpacity>
+      )}
+
       <Stack.Navigator screenOptions={{ headerShown: false }}>
         {!isLoggedIn ? (
           <Stack.Screen name="Auth" component={AuthScreen} />
@@ -104,6 +159,7 @@ function AppContent() {
             <Stack.Screen name="UserQuestions" component={QuestionsScreen} />
             <Stack.Screen name="AiSummary" component={AiSummaryScreen} />
             <Stack.Screen name="Flashcard" component={FlashcardScreen} />
+            <Stack.Screen name="MyNotes" component={MyNotesScreen} />
           </>
         )}
       </Stack.Navigator>
@@ -116,7 +172,9 @@ export default function App() {
     <SafeAreaProvider>
       <AuthProvider>
         <ThemeProvider>
-          <AppContent />
+          <NotificationProvider>
+            <AppContent />
+          </NotificationProvider>
         </ThemeProvider>
       </AuthProvider>
     </SafeAreaProvider>

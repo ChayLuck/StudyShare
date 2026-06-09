@@ -7,8 +7,11 @@ import {
   ScrollView,
   Image,
   Alert,
-  ActivityIndicator
+  ActivityIndicator,
+  Modal,
+  FlatList
 } from 'react-native';
+import { useNotifications } from '../context/NotificationContext';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { Ionicons } from '@expo/vector-icons';
 import api from '../services/api';
@@ -18,10 +21,12 @@ import { useAuth } from '../context/AuthContext';
 
 export default function ProfileScreen({ navigation }: any) {
   const { colors, toggleTheme, isDark } = useTheme();
-  const { isLoggedIn, logout } = useAuth();
-
+  const { logout, isLoggedIn, userId } = useAuth();
+  const { notifications, unreadCount, markAsRead, markAllAsRead } = useNotifications();
+  
   const [user, setUser] = useState<any>(null);
   const [loading, setLoading] = useState(true);
+  const [showNotificationsModal, setShowNotificationsModal] = useState(false);
 
   useEffect(() => {
     const unsubscribe = navigation.addListener('focus', () => {
@@ -91,7 +96,7 @@ export default function ProfileScreen({ navigation }: any) {
 
   if (!isLoggedIn) {
     return (
-      <SafeAreaView style={[styles.safeArea, { backgroundColor: colors.background }]}>
+      <SafeAreaView style={[styles.safeArea, { backgroundColor: colors.background }]} edges={['top', 'left', 'right']}>
         <View style={styles.unauthContainer}>
           <Text style={{ fontSize: 60, marginBottom: 20 }}>🔒</Text>
           <Text style={[styles.unauthTitle, { color: colors.text }]}>Login Required</Text>
@@ -110,11 +115,29 @@ export default function ProfileScreen({ navigation }: any) {
   }
 
   return (
-    <SafeAreaView style={[styles.safeArea, { backgroundColor: colors.background }]}>
+    <SafeAreaView style={[styles.safeArea, { backgroundColor: colors.background }]} edges={['top', 'left', 'right']}>
       {/* Header */}
       <View style={styles.header}>
         <Text style={[styles.headerTitle, { color: colors.text }]}>StudyShare</Text>
         <View style={styles.headerLinks}>
+          <TouchableOpacity onPress={() => setShowNotificationsModal(true)} style={[styles.iconButton, { position: 'relative', padding: 4 }]}>
+            <Ionicons name="notifications-outline" size={22} color={colors.text} />
+            {unreadCount > 0 && (
+              <View style={{
+                position: 'absolute',
+                top: 0,
+                right: 0,
+                backgroundColor: '#ef4444',
+                borderRadius: 7,
+                width: 14,
+                height: 14,
+                justifyContent: 'center',
+                alignItems: 'center'
+              }}>
+                <Text style={{ color: '#fff', fontSize: 9, fontWeight: 'bold' }}>{unreadCount}</Text>
+              </View>
+            )}
+          </TouchableOpacity>
           <TouchableOpacity onPress={toggleTheme} style={styles.iconButton}>
             <Ionicons name={isDark ? 'sunny' : 'moon'} size={20} color={colors.text} />
           </TouchableOpacity>
@@ -173,6 +196,7 @@ export default function ProfileScreen({ navigation }: any) {
         {/* My Activity Section */}
         <Text style={[styles.sectionTitle, { color: colors.text }]}>My Activity</Text>
         <View style={[styles.menuContainer, { backgroundColor: colors.card }]}>
+          <MenuItem icon="document-text" label="My Notes" color={colors.text} onPress={() => navigation.navigate('MyNotes')} />
           <MenuItem icon="help-circle" label="My Questions" color={colors.text} onPress={() => navigation.navigate('UserQuestions', { userId: user.id })} />
           <MenuItem icon="chatbubble" label="My Answers" color={colors.text} last onPress={() => navigation.navigate('UserQuestions', { answeredByMe: true })} />
         </View>
@@ -187,6 +211,123 @@ export default function ProfileScreen({ navigation }: any) {
         </View>
       </ScrollView>
       </View>
+
+      {/* Notifications Modal */}
+      <Modal
+        visible={showNotificationsModal}
+        animationType="slide"
+        transparent={true}
+        onRequestClose={() => setShowNotificationsModal(false)}
+      >
+        <View style={{
+          flex: 1,
+          backgroundColor: 'rgba(0,0,0,0.5)',
+          justifyContent: 'flex-end'
+        }}>
+          <View style={{
+            borderTopLeftRadius: 24,
+            borderTopRightRadius: 24,
+            height: '75%',
+            backgroundColor: colors.background,
+            paddingTop: 20
+          }}>
+            {/* Modal Header */}
+            <View style={{
+              flexDirection: 'row',
+              justifyContent: 'space-between',
+              alignItems: 'center',
+              paddingHorizontal: 20,
+              paddingBottom: 15,
+              borderBottomWidth: 1,
+              borderBottomColor: colors.border
+            }}>
+              <Text style={{ fontSize: 20, fontWeight: 'bold', color: colors.text }}>Notifications</Text>
+              <View style={{ flexDirection: 'row', alignItems: 'center', gap: 15 }}>
+                {unreadCount > 0 && (
+                  <TouchableOpacity onPress={markAllAsRead}>
+                    <Text style={{ color: colors.primary, fontWeight: '600' }}>Mark all read</Text>
+                  </TouchableOpacity>
+                )}
+                <TouchableOpacity onPress={() => setShowNotificationsModal(false)}>
+                  <Ionicons name="close" size={24} color={colors.text} />
+                </TouchableOpacity>
+              </View>
+            </View>
+
+            {/* Notification List */}
+            <FlatList
+              data={notifications}
+              keyExtractor={(item) => item.id}
+              contentContainerStyle={{ padding: 15 }}
+              ListEmptyComponent={(
+                <View style={{ alignItems: 'center', justifyContent: 'center', paddingVertical: 50 }}>
+                  <Ionicons name="notifications-off-outline" size={48} color={colors.textSecondary} style={{ marginBottom: 10 }} />
+                  <Text style={{ color: colors.textSecondary, fontSize: 16 }}>No notifications yet</Text>
+                </View>
+              )}
+              renderItem={({ item }) => (
+                <TouchableOpacity
+                  style={{
+                    flexDirection: 'row',
+                    padding: 12,
+                    borderRadius: 12,
+                    backgroundColor: item.isRead ? colors.card : colors.primary + '10',
+                    marginBottom: 10,
+                    alignItems: 'center',
+                    borderWidth: 1,
+                    borderColor: item.isRead ? colors.border : colors.primary + '30'
+                  }}
+                  onPress={async () => {
+                    await markAsRead(item.id);
+                    setShowNotificationsModal(false);
+                    navigation.navigate('NoteDetail', { note: item.note });
+                  }}
+                >
+                  {/* Sender Avatar */}
+                  <View style={{
+                    width: 40,
+                    height: 40,
+                    borderRadius: 20,
+                    backgroundColor: colors.chip,
+                    justifyContent: 'center',
+                    alignItems: 'center',
+                    marginRight: 12
+                  }}>
+                    {item.sender?.avatarUrl ? (
+                      <Image source={{ uri: item.sender.avatarUrl }} style={{ width: 40, height: 40, borderRadius: 20 }} />
+                    ) : (
+                      <Ionicons name="person" size={20} color={colors.textSecondary} />
+                    )}
+                  </View>
+
+                  {/* Notification Content */}
+                  <View style={{ flex: 1 }}>
+                    <Text style={{ color: colors.text, fontSize: 14, lineHeight: 18 }}>
+                      <Text style={{ fontWeight: 'bold' }}>{item.sender?.name || 'Someone'}</Text>
+                      {' commented on your note '}
+                      <Text style={{ fontWeight: '600', color: colors.primary }}>{item.note?.courseName}</Text>
+                    </Text>
+                    <Text style={{ color: colors.textSecondary, fontSize: 11, marginTop: 4 }}>
+                      {new Date(item.createdAt).toLocaleDateString('tr-TR')} {new Date(item.createdAt).toLocaleTimeString('tr-TR', { hour: '2-digit', minute: '2-digit' })}
+                    </Text>
+                  </View>
+
+                  {/* Unread Dot Indicator */}
+                  {!item.isRead && (
+                    <View style={{
+                      width: 8,
+                      height: 8,
+                      borderRadius: 4,
+                      backgroundColor: colors.primary,
+                      marginLeft: 8
+                    }} />
+                  )}
+                </TouchableOpacity>
+              )}
+            />
+          </View>
+        </View>
+      </Modal>
     </SafeAreaView>
   );
 }
@@ -396,5 +537,124 @@ const styles = StyleSheet.create({
     color: '#fff',
     fontSize: 16,
     fontWeight: 'bold',
+  },
+  sectionHeaderRow: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+    marginBottom: 12,
+    paddingHorizontal: 4,
+  },
+  uploadPrivateBtn: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    paddingVertical: 6,
+    paddingHorizontal: 12,
+    borderRadius: 20,
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.1,
+    shadowRadius: 3,
+    elevation: 2,
+  },
+  uploadPrivateText: {
+    color: '#fff',
+    fontSize: 12,
+    fontWeight: 'bold',
+  },
+  emptyNotesContainer: {
+    borderRadius: 16,
+    borderWidth: 1,
+    borderStyle: 'dashed',
+    padding: 30,
+    alignItems: 'center',
+    justifyContent: 'center',
+    marginBottom: 24,
+  },
+  emptyNotesText: {
+    fontSize: 14,
+    textAlign: 'center',
+    marginBottom: 12,
+  },
+  emptyUploadBtn: {
+    paddingVertical: 8,
+    paddingHorizontal: 16,
+    borderRadius: 20,
+    borderWidth: 1,
+  },
+  notesListContainer: {
+    marginBottom: 24,
+  },
+  noteCard: {
+    borderRadius: 16,
+    borderWidth: 1,
+    padding: 16,
+    marginBottom: 16,
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.05,
+    shadowRadius: 8,
+    elevation: 2,
+  },
+  noteCardPressable: {
+    width: '100%',
+  },
+  noteCardHeader: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+    marginBottom: 8,
+  },
+  noteCourseChip: {
+    paddingHorizontal: 8,
+    paddingVertical: 4,
+    borderRadius: 6,
+  },
+  noteCourseText: {
+    fontSize: 11,
+    fontWeight: 'bold',
+  },
+  noteStatusBadge: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    paddingHorizontal: 8,
+    paddingVertical: 4,
+    borderRadius: 12,
+  },
+  noteStatusText: {
+    fontSize: 10,
+    fontWeight: 'bold',
+  },
+  noteSchool: {
+    fontSize: 15,
+    fontWeight: 'bold',
+    marginBottom: 6,
+  },
+  noteDesc: {
+    fontSize: 13,
+    lineHeight: 18,
+  },
+  noteDivider: {
+    height: 1,
+    marginVertical: 12,
+  },
+  noteActionsRow: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+  },
+  noteActionBtn: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    paddingVertical: 8,
+    paddingHorizontal: 12,
+    borderRadius: 8,
+  },
+  noteActionText: {
+    fontSize: 12,
+    fontWeight: 'bold',
+  },
+  deleteActionBtn: {
+    // extra style for delete
   },
 });

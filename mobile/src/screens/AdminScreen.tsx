@@ -160,7 +160,7 @@ export default function AdminScreen({ navigation }: any) {
     <SafeAreaView style={styles.safeArea}>
       <View style={styles.header}>
         <TouchableOpacity style={styles.backButton} onPress={() => navigation.goBack()}>
-          <Text style={styles.backIcon}>←</Text>
+          <Ionicons name="chevron-back" size={28} />
         </TouchableOpacity>
         <Text style={styles.headerTitle}>Admin Dashboard</Text>
         <View style={{ width: 40 }} />

@@ -16,6 +16,7 @@ import { SafeAreaView } from 'react-native-safe-area-context';
 import * as ImagePicker from 'expo-image-picker';
 import api from '../services/api';
 import { useTheme } from '../context/ThemeContext';
+import { Ionicons } from '@expo/vector-icons';
 
 export default function EditProfileScreen({ navigation }: any) {
   const { colors } = useTheme();
@@ -108,7 +109,7 @@ export default function EditProfileScreen({ navigation }: any) {
     <SafeAreaView style={{ flex: 1, backgroundColor: colors.background }}>
       <View style={[styles.header, { backgroundColor: colors.card, borderBottomColor: colors.border }]}>
         <TouchableOpacity style={{ padding: 10 }} onPress={() => navigation.goBack()}>
-          <Text style={{ fontSize: 18, color: colors.text }}>← Back</Text>
+          <Ionicons name="chevron-back" size={28} color={colors.text} />
         </TouchableOpacity>
         <Text style={{ fontSize: 18, fontWeight: 'bold', color: colors.text }}>Edit Profile</Text>
         <View style={{ width: 60 }} />

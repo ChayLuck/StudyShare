@@ -23,6 +23,11 @@ export const generateFlashcards = async (req: AuthRequest, res: Response): Promi
       return;
     }
 
+    if (note.isPrivate && note.userId !== userId) {
+      res.status(403).json({ error: 'You do not have permission to access this note' });
+      return;
+    }
+
     // If flashcards already exist for this note, return them
     if (note.flashcards && note.flashcards.length > 0) {
       res.json({ message: 'Flashcards already exist', data: note.flashcards });
@@ -62,6 +67,20 @@ export const getFlashcards = async (req: AuthRequest, res: Response): Promise<vo
 
     if (!userId) {
       res.status(401).json({ error: 'Unauthorized' });
+      return;
+    }
+
+    const note = await prisma.note.findUnique({
+      where: { id: noteId }
+    });
+
+    if (!note) {
+      res.status(404).json({ error: 'Note not found' });
+      return;
+    }
+
+    if (note.isPrivate && note.userId !== userId) {
+      res.status(403).json({ error: 'You do not have permission to access this note' });
       return;
     }
 

@@ -1,4 +1,4 @@
-import React, { useEffect, useState } from 'react';
+import React, { useEffect, useState, useRef } from 'react';
 import { View, Text, StyleSheet, TouchableOpacity, ActivityIndicator, Dimensions, DeviceEventEmitter, Modal, FlatList, SafeAreaView, LayoutAnimation, Platform, UIManager, ScrollView } from 'react-native';
 
 if (Platform.OS === 'android' && UIManager.setLayoutAnimationEnabledExperimental) {
@@ -15,6 +15,7 @@ type Flashcard = {
   front: string;
   back: string;
   isKnown: boolean;
+  hasProgress?: boolean;
 };
 
 type FlashcardRouteProp = RouteProp<
@@ -52,28 +53,34 @@ const FlashcardItem = ({ card }: { card: Flashcard }) => {
 
   return (
     <ScrollView 
-      style={{ flexGrow: 0 }} 
+      style={{ flexGrow: 0, width: '100%' }} 
       contentContainerStyle={{ flexGrow: 1, justifyContent: 'center' }}
       showsVerticalScrollIndicator={false}
       nestedScrollEnabled={true}
     >
-      <View style={styles.cardInner}>
-        <Text style={[styles.cardLabel, { color: colors.textSecondary }]}>QUESTION</Text>
-        <Text style={[styles.cardFrontText, { color: colors.text }]}>{card.front}</Text>
-        
-        <View style={[styles.divider, { backgroundColor: colors.border }]} />
-        
-        {!showAnswer ? (
-          <TouchableOpacity style={styles.revealButton} onPressIn={handleReveal} activeOpacity={0.8}>
-            <Text style={styles.revealButtonText}>Tap to Reveal Answer</Text>
-          </TouchableOpacity>
-        ) : (
-          <View style={{ marginTop: 10, paddingBottom: 20 }}>
-            <Text style={[styles.cardLabel, { color: colors.textSecondary }]}>ANSWER</Text>
-            <Text style={[styles.cardBackText, { color: colors.textSecondary }]}>{card.back}</Text>
-          </View>
-        )}
-      </View>
+      <TouchableOpacity 
+        activeOpacity={1} 
+        onPress={handleReveal} 
+        disabled={showAnswer}
+      >
+        <View style={styles.cardInner}>
+          <Text style={[styles.cardLabel, { color: colors.textSecondary }]}>QUESTION</Text>
+          <Text style={[styles.cardFrontText, { color: colors.text }]}>{card.front}</Text>
+          
+          <View style={[styles.divider, { backgroundColor: colors.border }]} />
+          
+          {!showAnswer ? (
+            <TouchableOpacity style={styles.revealButton} onPress={handleReveal} activeOpacity={0.8}>
+              <Text style={styles.revealButtonText}>Tap to Reveal Answer</Text>
+            </TouchableOpacity>
+          ) : (
+            <View style={{ marginTop: 10, paddingBottom: 20 }}>
+              <Text style={[styles.cardLabel, { color: colors.textSecondary }]}>ANSWER</Text>
+              <Text style={[styles.cardBackText, { color: colors.textSecondary }]}>{card.back}</Text>
+            </View>
+          )}
+        </View>
+      </TouchableOpacity>
     </ScrollView>
   );
 };
@@ -83,6 +90,9 @@ export default function FlashcardScreen() {
   const navigation = useNavigation();
   const { noteId } = route.params;
   const { colors, isDark } = useTheme();
+
+  const swiperRef = useRef<any>(null);
+  const [currentIndex, setCurrentIndex] = useState(0);
 
   const [cards, setCards] = useState<Flashcard[]>([]);
   const [deck, setDeck] = useState<Flashcard[]>([]);
@@ -104,9 +114,9 @@ export default function FlashcardScreen() {
       const res = await api.get(`/flashcards/note/${noteId}`);
       if (res.data.data && res.data.data.length > 0) {
         setCards(res.data.data);
-        // Start the deck with cards that are NOT known (or all if we want to review all)
-        // Let's start with all cards for a fresh review, but prioritize unknown ones
         setDeck(res.data.data);
+        const dbUnknowns = res.data.data.filter((c: any) => c.hasProgress && !c.isKnown);
+        setUnknownCardsThisSession(dbUnknowns);
       } else {
         setCards([]);
       }
@@ -122,7 +132,6 @@ export default function FlashcardScreen() {
       setGenerating(true);
       const res = await api.post(`/flashcards/generate/${noteId}`, {}, { timeout: 45000 });
       if (res.data.data) {
-        // Refresh cards
         await fetchCards();
       }
     } catch (error) {
@@ -142,32 +151,69 @@ export default function FlashcardScreen() {
   };
 
   const onSwipedLeft = (index: number) => {
-    // "I don't know"
     const card = deck[index];
+    if (!card) return;
     updateProgress(card.id, false);
+
+    const updatedCard = { ...card, isKnown: false, hasProgress: true };
+    setDeck(prev => {
+      const copy = [...prev];
+      copy[index] = updatedCard;
+      return copy;
+    });
+    setCards(prev => {
+      const copy = [...prev];
+      const idx = copy.findIndex(c => c.id === card.id);
+      if (idx !== -1) copy[idx] = updatedCard;
+      return copy;
+    });
+
     setUnknownCardsThisSession(prev => {
-      // Avoid duplicates
       if (!prev.find(c => c.id === card.id)) return [...prev, card];
       return prev;
     });
   };
 
   const onSwipedRight = (index: number) => {
-    // "I know"
     const card = deck[index];
+    if (!card) return;
     updateProgress(card.id, true);
-    // Remove from unknown if it was there
+
+    const updatedCard = { ...card, isKnown: true, hasProgress: true };
+    setDeck(prev => {
+      const copy = [...prev];
+      copy[index] = updatedCard;
+      return copy;
+    });
+    setCards(prev => {
+      const copy = [...prev];
+      const idx = copy.findIndex(c => c.id === card.id);
+      if (idx !== -1) copy[idx] = updatedCard;
+      return copy;
+    });
+
     setUnknownCardsThisSession(prev => prev.filter(c => c.id !== card.id));
+  };
+
+  const onSwipedTop = (index: number) => {
+    console.log(`Skipped card at index ${index}`);
   };
 
   const onSwipedAll = () => {
     setIsFinished(true);
   };
 
-  const onTapCard = (index: number) => {
-    const card = deck[index];
-    if (card) {
-      DeviceEventEmitter.emit('FLIP_CARD', card.id);
+
+
+  const handlePrev = () => {
+    if (currentIndex > 0) {
+      setCurrentIndex(currentIndex - 1);
+    }
+  };
+
+  const handleNext = () => {
+    if (currentIndex < deck.length - 1) {
+      setCurrentIndex(currentIndex + 1);
     }
   };
 
@@ -176,6 +222,7 @@ export default function FlashcardScreen() {
       setDeck(unknownCardsThisSession);
       setUnknownCardsThisSession([]);
       setIsFinished(false);
+      setCurrentIndex(0);
     }
   };
 
@@ -183,6 +230,7 @@ export default function FlashcardScreen() {
     setDeck(cards);
     setUnknownCardsThisSession([]);
     setIsFinished(false);
+    setCurrentIndex(0);
   };
 
   if (loading) {
@@ -234,80 +282,150 @@ export default function FlashcardScreen() {
   }
 
   return (
-    <View style={[styles.container, { backgroundColor: colors.background }]}>
+    <SafeAreaView style={[styles.container, { backgroundColor: colors.background }]}>
       
       {/* Top Header Button for Unknown Cards */}
-      <View style={styles.topHeader}>
+      <View style={styles.headerContainer}>
         <TouchableOpacity style={[styles.topUnknownButton, { backgroundColor: colors.card }]} onPress={() => setIsUnknownModalVisible(true)}>
           <Ionicons name="warning" size={18} color="#e84118" style={{ marginRight: 6 }} />
           <Text style={styles.topUnknownButtonText}>Don't Know ({unknownCardsThisSession.length})</Text>
         </TouchableOpacity>
       </View>
 
-      <Swiper
-        cards={deck}
-        marginTop={60}
-        renderCard={(card: Flashcard | undefined) => {
-          if (!card) return <View style={[styles.card, { backgroundColor: colors.card, borderColor: colors.border }]} />;
-          return (
-            <View style={[styles.card, { backgroundColor: colors.card, borderColor: colors.border }]}>
-              <FlashcardItem card={card} />
-            </View>
-          );
-        }}
-        onTapCard={onTapCard}
-        onSwipedLeft={onSwipedLeft}
-        onSwipedRight={onSwipedRight}
-        onSwipedAll={onSwipedAll}
-        cardIndex={0}
-        backgroundColor={colors.background}
-        stackSize={3}
-        overlayLabels={{
-          left: {
-            title: "DON'T KNOW",
-            style: {
-              label: {
-                backgroundColor: '#e84118',
-                borderColor: '#e84118',
-                color: 'white',
-                borderWidth: 1
-              },
-              wrapper: {
-                flexDirection: 'column',
-                alignItems: 'flex-end',
-                justifyContent: 'flex-start',
-                marginTop: 30,
-                marginLeft: -30
+      <View style={styles.swiperWrapper}>
+        <Swiper
+          key={currentIndex}
+          ref={swiperRef}
+          cards={deck}
+          containerStyle={styles.swiperContainerStyle}
+          cardStyle={[
+            styles.card,
+            {
+              backgroundColor: colors.card,
+              borderColor: colors.border,
+              position: 'absolute',
+              top: (height * 0.54 - height * 0.46) / 2,
+              left: width * 0.05,
+            }
+          ]}
+          renderCard={(card: Flashcard | undefined, index: number) => {
+            if (!card) return <View style={{ flex: 1 }} />;
+            return (
+              <View style={{ flex: 1, position: 'relative' }}>
+                <View style={styles.cardTopRow}>
+                  <View style={[styles.indexBadge, { backgroundColor: colors.chip }]}>
+                    <Text style={[styles.indexBadgeText, { color: colors.textSecondary }]}>
+                      {index + 1}/{deck.length}
+                    </Text>
+                  </View>
+                </View>
+                <FlashcardItem card={card} />
+              </View>
+            );
+          }}
+          onSwipedLeft={onSwipedLeft}
+          onSwipedRight={onSwipedRight}
+          onSwipedTop={onSwipedTop}
+          onSwipedAll={onSwipedAll}
+          onSwiped={(index: number) => {
+            setCurrentIndex(index + 1);
+          }}
+          cardIndex={currentIndex}
+          backgroundColor={colors.background}
+          stackSize={3}
+          disableTopSwipe={true}
+          disableBottomSwipe={true}
+          overlayLabels={{
+            left: {
+              title: "DON'T KNOW",
+              style: {
+                label: {
+                  backgroundColor: '#e84118',
+                  borderColor: '#e84118',
+                  color: 'white',
+                  borderWidth: 1
+                },
+                wrapper: {
+                  flexDirection: 'column',
+                  alignItems: 'flex-end',
+                  justifyContent: 'flex-start',
+                  marginTop: 30,
+                  marginLeft: -30
+                }
+              }
+            },
+            right: {
+              title: 'KNOW',
+              style: {
+                label: {
+                  backgroundColor: '#4cd137',
+                  borderColor: '#4cd137',
+                  color: 'white',
+                  borderWidth: 1
+                },
+                wrapper: {
+                  flexDirection: 'column',
+                  alignItems: 'flex-start',
+                  justifyContent: 'flex-start',
+                  marginTop: 30,
+                  marginLeft: 30
+                }
               }
             }
-          },
-          right: {
-            title: 'KNOW',
-            style: {
-              label: {
-                backgroundColor: '#4cd137',
-                borderColor: '#4cd137',
-                color: 'white',
-                borderWidth: 1
-              },
-              wrapper: {
-                flexDirection: 'column',
-                alignItems: 'flex-start',
-                justifyContent: 'flex-start',
-                marginTop: 30,
-                marginLeft: 30
-              }
-            }
-          }
-        }}
-        animateOverlayLabelsOpacity
-        animateCardOpacity
-        swipeBackCard
-      />
-      
-      <View style={styles.hintContainer}>
-        <Text style={[styles.hintText, { color: colors.textSecondary }]}>Swipe Left: Don't Know  |  Swipe Right: Know</Text>
+          }}
+          animateOverlayLabelsOpacity
+          animateCardOpacity
+          swipeBackCard
+        />
       </View>
+      
+      {/* Bottom Controls Container */}
+      {!isFinished && deck.length > 0 && (
+        <View style={styles.bottomControlsContainer}>
+          {/* Status Badge Row with Counts */}
+          <View style={styles.statusRow}>
+            <View style={[styles.statusBadge, { backgroundColor: '#e8411815', borderColor: '#e8411830', marginRight: 10 }]}>
+              <Ionicons name="close-circle" size={14} color="#e84118" style={{ marginRight: 4 }} />
+              <Text style={[styles.statusText, { color: '#e84118' }]}>
+                DON'T KNOW ({deck.filter(c => c.hasProgress && !c.isKnown).length})
+              </Text>
+            </View>
+
+            <View style={[styles.statusBadge, { backgroundColor: '#4cd13715', borderColor: '#4cd13730' }]}>
+              <Ionicons name="checkmark-circle" size={14} color="#4cd137" style={{ marginRight: 4 }} />
+              <Text style={[styles.statusText, { color: '#4cd137' }]}>
+                KNOW ({deck.filter(c => c.hasProgress && c.isKnown).length})
+              </Text>
+            </View>
+          </View>
+
+          {/* Hint text - Moved a bit higher (bi tık yukarı) */}
+          <Text style={[styles.hintText, { color: colors.textSecondary, marginBottom: 10, marginTop: 4 }]}>
+            Swipe Left: Don't Know | Swipe Right: Know
+          </Text>
+
+          {/* Navigation Controls: Prev / Next Buttons */}
+          <View style={styles.navigationRow}>
+            <TouchableOpacity 
+              style={[styles.navButton, currentIndex === 0 && styles.disabledNavButton]} 
+              onPress={handlePrev}
+              disabled={currentIndex === 0}
+            >
+              <Ionicons name="chevron-back" size={24} color={currentIndex === 0 ? colors.textSecondary + '40' : colors.primary || '#FF6B6B'} />
+              <Text style={[styles.navButtonText, { color: currentIndex === 0 ? colors.textSecondary + '40' : colors.text }]}>Prev</Text>
+            </TouchableOpacity>
+
+            <TouchableOpacity 
+              style={[styles.navButton, currentIndex === deck.length - 1 && styles.disabledNavButton]} 
+              onPress={handleNext}
+              disabled={currentIndex === deck.length - 1}
+            >
+              <Text style={[styles.navButtonText, { color: currentIndex === deck.length - 1 ? colors.textSecondary + '40' : colors.text }]}>Next</Text>
+              <Ionicons name="chevron-forward" size={24} color={currentIndex === deck.length - 1 ? colors.textSecondary + '40' : colors.primary || '#FF6B6B'} />
+            </TouchableOpacity>
+          </View>
+        </View>
+      )}
 
       <Modal visible={isUnknownModalVisible} animationType="slide" presentationStyle="pageSheet" onRequestClose={() => setIsUnknownModalVisible(false)}>
         <SafeAreaView style={[styles.modalContainer, { backgroundColor: colors.background }]}>
@@ -337,7 +455,7 @@ export default function FlashcardScreen() {
         </SafeAreaView>
       </Modal>
 
-    </View>
+    </SafeAreaView>
   );
 }
 
@@ -354,8 +472,8 @@ const styles = StyleSheet.create({
     backgroundColor: '#f5f6fa',
   },
   card: {
-    minHeight: height * 0.5,
-    maxHeight: height * 0.8,
+    width: width * 0.9,
+    height: height * 0.46,
     borderRadius: 20,
     borderWidth: 1,
     borderColor: '#E8E8E8',
@@ -367,10 +485,12 @@ const styles = StyleSheet.create({
     shadowOpacity: 0.1,
     shadowRadius: 15,
     elevation: 8,
-    marginTop: 20,
+    alignSelf: 'center',
+    position: 'relative',
   },
   cardInner: {
     justifyContent: 'center',
+    paddingTop: 15,
   },
   cardLabel: {
     fontSize: 12,
@@ -547,5 +667,87 @@ const styles = StyleSheet.create({
     elevation: 2,
     borderWidth: 1,
     borderColor: '#eee',
+  },
+  headerContainer: {
+    height: 50,
+    width: '100%',
+    paddingHorizontal: 20,
+    justifyContent: 'center',
+    alignItems: 'flex-end',
+    marginTop: Platform.OS === 'ios' ? 0 : 20,
+  },
+  swiperWrapper: {
+    flex: 1,
+    justifyContent: 'center',
+    alignItems: 'center',
+  },
+  swiperContainerStyle: {
+    position: 'relative',
+    height: height * 0.54,
+    width: '100%',
+    backgroundColor: 'transparent',
+  },
+  bottomControlsContainer: {
+    height: 150,
+    width: '100%',
+    alignItems: 'center',
+    justifyContent: 'center',
+    paddingBottom: 10,
+  },
+  cardTopRow: {
+    position: 'absolute',
+    top: 15,
+    left: 15,
+    zIndex: 10,
+  },
+  indexBadge: {
+    paddingHorizontal: 10,
+    paddingVertical: 4,
+    borderRadius: 12,
+  },
+  indexBadgeText: {
+    fontSize: 12,
+    fontWeight: 'bold',
+  },
+  statusRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'center',
+    marginBottom: 12,
+    height: 32,
+  },
+  statusBadge: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    paddingHorizontal: 12,
+    paddingVertical: 6,
+    borderRadius: 16,
+    borderWidth: 1,
+  },
+  statusText: {
+    fontSize: 12,
+    fontWeight: 'bold',
+    letterSpacing: 0.5,
+  },
+  navigationRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'space-between',
+    width: '60%',
+    marginBottom: 10,
+  },
+  navButton: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    paddingVertical: 8,
+    paddingHorizontal: 12,
+  },
+  disabledNavButton: {
+    opacity: 0.5,
+  },
+  navButtonText: {
+    fontSize: 15,
+    fontWeight: '600',
+    marginHorizontal: 6,
   },
 });
