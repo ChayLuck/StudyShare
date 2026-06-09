@@ -56,6 +56,7 @@ Do NOT wrap the JSON in Markdown formatting like \`\`\`json. Just return the raw
       }
     ],
     generationConfig: {
+      responseMimeType: "application/json",
       thinkingConfig: {
         thinkingBudget: 0
       }

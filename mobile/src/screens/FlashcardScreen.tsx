@@ -120,7 +120,7 @@ export default function FlashcardScreen() {
   const generateCards = async () => {
     try {
       setGenerating(true);
-      const res = await api.post(`/flashcards/generate/${noteId}`);
+      const res = await api.post(`/flashcards/generate/${noteId}`, {}, { timeout: 45000 });
       if (res.data.data) {
         // Refresh cards
         await fetchCards();
