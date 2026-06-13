@@ -32,7 +32,7 @@ export const createQuestion = async (req: any, res: Response): Promise<void> => 
       },
       include: {
         user: {
-          select: { id: true, name: true, avatarUrl: true }
+          select: { id: true, name: true, avatarUrl: true, points: true }
         }
       }
     });
@@ -80,7 +80,7 @@ export const getQuestions = async (req: Request, res: Response): Promise<void> =
       orderBy: { createdAt: 'desc' },
       include: {
         user: {
-          select: { id: true, name: true, avatarUrl: true }
+          select: { id: true, name: true, avatarUrl: true, points: true }
         },
         _count: {
           select: { answers: true }
@@ -106,13 +106,13 @@ export const getQuestionById = async (req: Request, res: Response): Promise<void
       where: { id },
       include: {
         user: {
-          select: { id: true, name: true, avatarUrl: true }
+          select: { id: true, name: true, avatarUrl: true, points: true }
         },
         answers: {
           orderBy: { createdAt: 'asc' },
           include: {
             user: {
-              select: { id: true, name: true, avatarUrl: true }
+              select: { id: true, name: true, avatarUrl: true, points: true }
             }
           }
         }

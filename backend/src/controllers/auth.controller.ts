@@ -10,6 +10,7 @@ import {
 } from '../utils/jwt.util';
 import { sendVerificationEmail, sendPasswordResetEmail } from '../services/email.service';
 import { uploadToStorage } from '../services/storage.service';
+import { calculateUserRank } from '../utils/rank.util';
 
 export const register = async (req: Request, res: Response): Promise<void> => {
   console.log('[REGISTER] Request received:', req.body.email);
@@ -228,7 +229,12 @@ export const getMe = async (req: any, res: Response): Promise<void> => {
       return;
     }
 
-    res.json({ user });
+    const userWithRank = {
+      ...user,
+      rank: calculateUserRank(user.points)
+    };
+
+    res.json({ user: userWithRank });
   } catch (error: any) {
     console.error('GET_ME ERROR:', error);
     res.status(500).json({ error: 'Internal server error', message: error.message, stack: error.stack });
@@ -332,9 +338,14 @@ export const getLeaderboard = async (req: any, res: Response): Promise<void> => 
           university: true,
           avatarUrl: true,
           pomodoroMinutes: true,
+          points: true,
         }
       });
-      res.json({ data: topUsers });
+      const dataWithRank = topUsers.map(user => ({
+        ...user,
+        rank: calculateUserRank(user.points || 0)
+      }));
+      res.json({ data: dataWithRank });
       return;
     }
 
@@ -350,7 +361,11 @@ export const getLeaderboard = async (req: any, res: Response): Promise<void> => 
         points: true,
       }
     });
-    res.json({ data: topUsers });
+    const dataWithRank = topUsers.map(user => ({
+      ...user,
+      rank: calculateUserRank(user.points || 0)
+    }));
+    res.json({ data: dataWithRank });
   } catch (error) {
     console.error('Leaderboard Error:', error);
     res.status(500).json({ error: 'Internal server error' });
