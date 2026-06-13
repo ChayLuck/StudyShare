@@ -12,6 +12,7 @@ import api from '../services/api';
 import * as ImagePicker from 'expo-image-picker';
 import * as DocumentPicker from 'expo-document-picker';
 import { useAuth } from '../context/AuthContext';
+import { calculateUserRank } from '../utils/rank';
 
 export default function QuestionDetailScreen({ route, navigation }: any) {
   const { questionId } = route.params;
@@ -179,7 +180,26 @@ export default function QuestionDetailScreen({ route, navigation }: any) {
               </Text>
             )}
           </View>
-          <Text style={[styles.userName, { color: colors.text }]}>{question.user.name}</Text>
+          <View style={{ flexDirection: 'row', alignItems: 'center', gap: 6 }}>
+            <Text style={[styles.userName, { color: colors.text }]}>{question.user.name}</Text>
+            {question.user?.points !== undefined && (
+              (() => {
+                const rank = calculateUserRank(question.user.points);
+                return (
+                  <View style={{
+                    backgroundColor: rank.color + '15',
+                    paddingHorizontal: 6,
+                    paddingVertical: 1,
+                    borderRadius: 4,
+                  }}>
+                    <Text style={{ fontSize: 9, fontWeight: 'bold', color: rank.color }}>
+                      {rank.title}
+                    </Text>
+                  </View>
+                );
+              })()
+            )}
+          </View>
         </View>
         <View style={[styles.courseBadge, { backgroundColor: colors.chip }]}>
           <Text style={[styles.courseBadgeText, { color: colors.chipText }]}>{question.course}</Text>
@@ -234,7 +254,26 @@ export default function QuestionDetailScreen({ route, navigation }: any) {
                 </Text>
               )}
             </View>
-            <Text style={[styles.userNameSmall, { color: colors.text }]}>{item.user.name}</Text>
+            <View style={{ flexDirection: 'row', alignItems: 'center', gap: 6 }}>
+              <Text style={[styles.userNameSmall, { color: colors.text }]}>{item.user.name}</Text>
+              {item.user?.points !== undefined && (
+                (() => {
+                  const rank = calculateUserRank(item.user.points);
+                  return (
+                    <View style={{
+                      backgroundColor: rank.color + '15',
+                      paddingHorizontal: 6,
+                      paddingVertical: 1,
+                      borderRadius: 4,
+                    }}>
+                      <Text style={{ fontSize: 9, fontWeight: 'bold', color: rank.color }}>
+                        {rank.title}
+                      </Text>
+                    </View>
+                  );
+                })()
+              )}
+            </View>
             {item.userId === question.userId && (
               <View style={[styles.ownerBadge, { backgroundColor: colors.primary + '20' }]}>
                 <Text style={[styles.ownerBadgeText, { color: colors.primary }]}>OWNER</Text>

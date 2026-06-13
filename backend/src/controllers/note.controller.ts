@@ -109,7 +109,7 @@ export const getNotes = async (req: AuthRequest, res: Response): Promise<void> =
       take: limit,
       orderBy: { createdAt: 'desc' },
       include: {
-        user: { select: { email: true, name: true, avatarUrl: true } },
+        user: { select: { email: true, name: true, avatarUrl: true, points: true } },
       }
     });
 
@@ -222,7 +222,7 @@ export const getMyFavorites = async (req: AuthRequest, res: Response): Promise<v
       include: {
         note: {
           include: {
-            user: { select: { email: true, name: true, avatarUrl: true } },
+            user: { select: { email: true, name: true, avatarUrl: true, points: true } },
             _count: { select: { favorites: true } }
           }
         }

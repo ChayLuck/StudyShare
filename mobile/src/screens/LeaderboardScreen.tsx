@@ -71,10 +71,25 @@ export default function LeaderboardScreen({ navigation }: any) {
         )}
 
         <View style={styles.info}>
-          <Text style={[styles.name, { color: colors.text }, item.id === currentUserId && { color: colors.primary }]} numberOfLines={1}>
-            {item.name || 'Anonymous User'}
-            {item.id === currentUserId && " (You)"}
-          </Text>
+          <View style={{ flexDirection: 'row', alignItems: 'center', flexWrap: 'wrap', gap: 4 }}>
+            <Text style={[styles.name, { color: colors.text }, item.id === currentUserId && { color: colors.primary }]} numberOfLines={1}>
+              {item.name || 'Anonymous User'}
+              {item.id === currentUserId && " (You)"}
+            </Text>
+            {item.rank && (
+              <View style={{
+                backgroundColor: item.rank.color + '15',
+                paddingHorizontal: 6,
+                paddingVertical: 2,
+                borderRadius: 4,
+                marginLeft: 4
+              }}>
+                <Text style={{ fontSize: 9, fontWeight: 'bold', color: item.rank.color }}>
+                  {item.rank.title}
+                </Text>
+              </View>
+            )}
+          </View>
           {item.university && (
             <Text style={[styles.university, { color: colors.textSecondary }]} numberOfLines={1}>
               {item.university}

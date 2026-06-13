@@ -162,8 +162,15 @@ export default function ProfileScreen({ navigation }: any) {
             <View style={styles.profileInfo}>
               <Text style={[styles.userName, { color: colors.text }]}>{user?.name || 'User'}</Text>
               <Text style={[styles.userEmail, { color: colors.textSecondary }]}>{user?.email}</Text>
-              <View style={[styles.uniChip, { backgroundColor: colors.chip }]}>
-                <Text style={[styles.uniChipText, { color: colors.primary }]}>{user?.university || 'NOT SPECIFIED'}</Text>
+              <View style={{ flexDirection: 'row', flexWrap: 'wrap', gap: 6 }}>
+                <View style={[styles.uniChip, { backgroundColor: colors.chip }]}>
+                  <Text style={[styles.uniChipText, { color: colors.primary }]}>{user?.university || 'NOT SPECIFIED'}</Text>
+                </View>
+                {user?.rank && (
+                  <View style={[styles.uniChip, { backgroundColor: user.rank.color + '15' }]}>
+                    <Text style={[styles.uniChipText, { color: user.rank.color }]}>{user.rank.title}</Text>
+                  </View>
+                )}
               </View>
             </View>
             <TouchableOpacity
