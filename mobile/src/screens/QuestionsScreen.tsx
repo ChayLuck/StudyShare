@@ -14,6 +14,7 @@ import * as ImagePicker from 'expo-image-picker';
 import * as DocumentPicker from 'expo-document-picker';
 import * as SecureStore from 'expo-secure-store';
 import { useAuth } from '../context/AuthContext';
+import { calculateUserRank } from '../utils/rank';
 
 const COURSES = ['Calculus', 'Physics', 'Chemistry', 'Biology', 'History', 'Other'];
 
@@ -179,7 +180,26 @@ export default function QuestionsScreen({ route, navigation }: any) {
             )}
           </View>
           <View>
-            <Text style={[styles.userName, { color: colors.text }]}>{item.user.name || 'Anonymous'}</Text>
+            <View style={{ flexDirection: 'row', alignItems: 'center', gap: 6 }}>
+              <Text style={[styles.userName, { color: colors.text }]}>{item.user.name || 'Anonymous'}</Text>
+              {item.user?.points !== undefined && (
+                (() => {
+                  const rank = calculateUserRank(item.user.points);
+                  return (
+                    <View style={{
+                      backgroundColor: rank.color + '15',
+                      paddingHorizontal: 6,
+                      paddingVertical: 1,
+                      borderRadius: 4,
+                    }}>
+                      <Text style={{ fontSize: 9, fontWeight: 'bold', color: rank.color }}>
+                        {rank.title}
+                      </Text>
+                    </View>
+                  );
+                })()
+              )}
+            </View>
             <Text style={[styles.timeText, { color: colors.textSecondary }]}>
               {new Date(item.createdAt).toLocaleDateString('tr-TR')}
             </Text>

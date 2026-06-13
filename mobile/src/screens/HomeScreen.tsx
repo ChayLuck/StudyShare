@@ -18,6 +18,7 @@ import api from "../services/api";
 import * as SecureStore from "expo-secure-store";
 import { useTheme } from "../context/ThemeContext";
 import { useAuth } from "../context/AuthContext";
+import { calculateUserRank } from "../utils/rank";
 
 export default function HomeScreen({ navigation }: any) {
   const { colors, toggleTheme, isDark } = useTheme();
@@ -301,9 +302,28 @@ export default function HomeScreen({ navigation }: any) {
             )}
           </View>
           <View>
-            <Text style={[styles.uploaderName, { color: colors.text }]}>
-              {item.user?.name || "Unknown"}
-            </Text>
+            <View style={{ flexDirection: "row", alignItems: "center", gap: 6 }}>
+              <Text style={[styles.uploaderName, { color: colors.text }]}>
+                {item.user?.name || "Unknown"}
+              </Text>
+              {item.user?.points !== undefined && (
+                (() => {
+                  const rank = calculateUserRank(item.user.points);
+                  return (
+                    <View style={{
+                      backgroundColor: rank.color + '15',
+                      paddingHorizontal: 6,
+                      paddingVertical: 1,
+                      borderRadius: 4,
+                    }}>
+                      <Text style={{ fontSize: 9, fontWeight: 'bold', color: rank.color }}>
+                        {rank.title}
+                      </Text>
+                    </View>
+                  );
+                })()
+              )}
+            </View>
             <Text style={[styles.uploadDate, { color: colors.textSecondary }]}>
               {item.createdAt
                 ? new Date(item.createdAt).toLocaleDateString("tr-TR")
