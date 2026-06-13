@@ -84,153 +84,167 @@ export default function UploadScreen({ navigation, route }: any) {
   };
 
   return (
-    <SafeAreaView style={[styles.safeArea, { backgroundColor: colors.background }]}>
-      <View style={[styles.header, { backgroundColor: colors.card, borderBottomColor: colors.border }]}>
-        <TouchableOpacity style={styles.backButton} onPress={() => navigation.goBack()}>
-          <Ionicons name="chevron-back" size={28} color={colors.text} />
-        </TouchableOpacity>
-        <Text style={[styles.headerTitle, { color: colors.text }]}>
-          {isPrivate ? 'Upload Private Note' : 'Upload Note'}
-        </Text>
-        <View style={{ width: 40 }} />
-      </View>
-
-      <ScrollView contentContainerStyle={styles.container} keyboardShouldPersistTaps="handled">
-        
-        <View style={styles.inputGroup}>
-          <Text style={[styles.label, { color: colors.text }]}>School Name</Text>
-          <TextInput
-            style={[styles.input, { backgroundColor: colors.card, color: colors.text, borderColor: colors.border }]}
-            placeholder="e.g. HARVARD UNIVERSITY"
-            placeholderTextColor={colors.textSecondary}
-            value={schoolName}
-            onChangeText={(text) => {
-              const val = text.toUpperCase();
-              setSchoolName(val);
-              searchFuzzy('school', val);
-            }}
-            autoCapitalize="characters"
-          />
-          <ScrollView horizontal showsHorizontalScrollIndicator={false} style={styles.chipContainer}>
-            {UNIVERSITIES.map(u => (
-              <TouchableOpacity 
-                key={u} 
-                style={[
-                  styles.chip, 
-                  { backgroundColor: colors.card, borderColor: colors.border },
-                  schoolName === u && { backgroundColor: colors.primary, borderColor: colors.primary }
-                ]} 
-                onPress={() => setSchoolName(u)}
-              >
-                <Text style={[styles.chipText, { color: colors.textSecondary }, schoolName === u && { color: '#fff' }]}>{u}</Text>
-              </TouchableOpacity>
-            ))}
-          </ScrollView>
-          {schoolSuggestions.length > 0 && (
-            <View style={[styles.suggestionsContainer, { backgroundColor: colors.card, borderColor: colors.border }]}>
-              {schoolSuggestions.map(s => (
-                <TouchableOpacity 
-                  key={s} 
-                  style={[styles.suggestionItem, { borderBottomColor: colors.divider }]} 
-                  onPress={() => { setSchoolName(s); setSchoolSuggestions([]); }}
-                >
-                  <Text style={[styles.suggestionText, { color: colors.primary }]}>{s}</Text>
-                </TouchableOpacity>
-              ))}
-            </View>
-          )}
-        </View>
-
-        <View style={styles.inputGroup}>
-          <Text style={[styles.label, { color: colors.text }]}>Course Name</Text>
-          <TextInput
-            style={[styles.input, { backgroundColor: colors.card, color: colors.text, borderColor: colors.border }]}
-            placeholder="e.g. CS50"
-            placeholderTextColor={colors.textSecondary}
-            value={courseName}
-            onChangeText={(text) => {
-              const val = text.toUpperCase();
-              setCourseName(val);
-              searchFuzzy('course', val);
-            }}
-            autoCapitalize="characters"
-          />
-          {courseSuggestions.length > 0 && (
-            <View style={[styles.suggestionsContainer, { backgroundColor: colors.card, borderColor: colors.border }]}>
-              {courseSuggestions.map(s => (
-                <TouchableOpacity 
-                  key={s} 
-                  style={[styles.suggestionItem, { borderBottomColor: colors.divider }]} 
-                  onPress={() => { setCourseName(s); setCourseSuggestions([]); }}
-                >
-                  <Text style={[styles.suggestionText, { color: colors.primary }]}>{s}</Text>
-                </TouchableOpacity>
-              ))}
-            </View>
-          )}
-        </View>
-
-        <View style={styles.inputGroup}>
-          <Text style={[styles.label, { color: colors.text }]}>Description (Optional)</Text>
-          <TextInput
-            style={[styles.input, styles.textArea, { backgroundColor: colors.card, color: colors.text, borderColor: colors.border }]}
-            placeholder="What is this note about?"
-            placeholderTextColor={colors.textSecondary}
-            value={description}
-            onChangeText={setDescription}
-            multiline
-            numberOfLines={4}
-            textAlignVertical="top"
-          />
-        </View>
-
-        <View style={styles.inputGroup}>
-          <Text style={[styles.label, { color: colors.text }]}>Attachment</Text>
-          <TouchableOpacity 
-            style={[
-              styles.fileBox, 
-              { backgroundColor: isDark ? colors.card : '#EEF2FF', borderColor: colors.primary }
-            ]} 
-            onPress={pickFile}
-          >
-            <View style={[styles.fileIconPlaceholder, { backgroundColor: colors.background }]}>
-              <Ionicons name={file ? "document-text" : "folder-open"} size={24} color={colors.primary} />
-            </View>
-            <Text style={[styles.fileBoxText, { color: colors.primary }]}>
-              {file ? file.name : 'Tap to select PDF or Image'}
-            </Text>
+    <View style={styles.modalOverlay}>
+      <View style={[styles.modalContent, { backgroundColor: colors.card }]}>
+        <View style={[styles.modalHeader, { borderBottomColor: colors.border }]}>
+          <Text style={[styles.modalTitle, { color: colors.text }]}>
+            {isPrivate ? 'Upload Private Note' : 'Upload Note'}
+          </Text>
+          <TouchableOpacity onPress={() => navigation.goBack()}>
+            <Text style={{ color: colors.primary, fontWeight: 'bold' }}>Close</Text>
           </TouchableOpacity>
         </View>
 
-        <TouchableOpacity 
-          style={[styles.uploadButton, { backgroundColor: colors.primary }, loading && styles.uploadButtonDisabled]} 
-          onPress={handleUpload}
-          disabled={loading}
-        >
-          <Text style={styles.uploadButtonText}>
-            {loading ? 'Uploading...' : isPrivate ? 'Upload Private Note' : 'Publish Note'}
-          </Text>
-        </TouchableOpacity>
+        <ScrollView contentContainerStyle={styles.container} keyboardShouldPersistTaps="handled" showsVerticalScrollIndicator={false}>
+          
+          <View style={styles.inputGroup}>
+            <Text style={[styles.label, { color: colors.text }]}>School Name</Text>
+            <TextInput
+              style={[styles.input, { backgroundColor: colors.background, color: colors.text, borderColor: colors.border }]}
+              placeholder="e.g. HARVARD UNIVERSITY"
+              placeholderTextColor={colors.textSecondary}
+              value={schoolName}
+              onChangeText={(text) => {
+                const val = text.toUpperCase();
+                setSchoolName(val);
+                searchFuzzy('school', val);
+              }}
+              autoCapitalize="characters"
+            />
+            <ScrollView horizontal showsHorizontalScrollIndicator={false} style={styles.chipContainer}>
+              {UNIVERSITIES.map(u => (
+                <TouchableOpacity 
+                  key={u} 
+                  style={[
+                    styles.chip, 
+                    { backgroundColor: colors.background, borderColor: colors.border },
+                    schoolName === u && { backgroundColor: colors.primary, borderColor: colors.primary }
+                  ]} 
+                  onPress={() => setSchoolName(u)}
+                >
+                  <Text style={[styles.chipText, { color: colors.textSecondary }, schoolName === u && { color: '#fff' }]}>{u}</Text>
+                </TouchableOpacity>
+              ))}
+            </ScrollView>
+            {schoolSuggestions.length > 0 && (
+              <View style={[styles.suggestionsContainer, { backgroundColor: colors.background, borderColor: colors.border }]}>
+                {schoolSuggestions.map(s => (
+                  <TouchableOpacity 
+                    key={s} 
+                    style={[styles.suggestionItem, { borderBottomColor: colors.divider }]} 
+                    onPress={() => { setSchoolName(s); setSchoolSuggestions([]); }}
+                  >
+                    <Text style={[styles.suggestionText, { color: colors.primary }]}>{s}</Text>
+                  </TouchableOpacity>
+                ))}
+              </View>
+            )}
+          </View>
 
-      </ScrollView>
-    </SafeAreaView>
+          <View style={styles.inputGroup}>
+            <Text style={[styles.label, { color: colors.text }]}>Course Name</Text>
+            <TextInput
+              style={[styles.input, { backgroundColor: colors.background, color: colors.text, borderColor: colors.border }]}
+              placeholder="e.g. CS50"
+              placeholderTextColor={colors.textSecondary}
+              value={courseName}
+              onChangeText={(text) => {
+                const val = text.toUpperCase();
+                setCourseName(val);
+                searchFuzzy('course', val);
+              }}
+              autoCapitalize="characters"
+            />
+            {courseSuggestions.length > 0 && (
+              <View style={[styles.suggestionsContainer, { backgroundColor: colors.background, borderColor: colors.border }]}>
+                {courseSuggestions.map(s => (
+                  <TouchableOpacity 
+                    key={s} 
+                    style={[styles.suggestionItem, { borderBottomColor: colors.divider }]} 
+                    onPress={() => { setCourseName(s); setCourseSuggestions([]); }}
+                  >
+                    <Text style={[styles.suggestionText, { color: colors.primary }]}>{s}</Text>
+                  </TouchableOpacity>
+                ))}
+              </View>
+            )}
+          </View>
+
+          <View style={styles.inputGroup}>
+            <Text style={[styles.label, { color: colors.text }]}>Description (Optional)</Text>
+            <TextInput
+              style={[styles.input, styles.textArea, { backgroundColor: colors.background, color: colors.text, borderColor: colors.border }]}
+              placeholder="What is this note about?"
+              placeholderTextColor={colors.textSecondary}
+              value={description}
+              onChangeText={setDescription}
+              multiline
+              numberOfLines={4}
+              textAlignVertical="top"
+            />
+          </View>
+
+          <View style={styles.inputGroup}>
+            <Text style={[styles.label, { color: colors.text }]}>Attachment</Text>
+            <TouchableOpacity 
+              style={[
+                styles.fileBox, 
+                { backgroundColor: isDark ? colors.background : '#EEF2FF', borderColor: colors.primary }
+              ]} 
+              onPress={pickFile}
+            >
+              <View style={[styles.fileIconPlaceholder, { backgroundColor: colors.card }]}>
+                <Ionicons name={file ? "document-text" : "folder-open"} size={24} color={colors.primary} />
+              </View>
+              <Text style={[styles.fileBoxText, { color: colors.primary }]}>
+                {file ? file.name : 'Tap to select PDF or Image'}
+              </Text>
+            </TouchableOpacity>
+          </View>
+
+          <TouchableOpacity 
+            style={[styles.uploadButton, { backgroundColor: colors.primary }, loading && styles.uploadButtonDisabled]} 
+            onPress={handleUpload}
+            disabled={loading}
+          >
+            <Text style={styles.uploadButtonText}>
+              {loading ? 'Uploading...' : isPrivate ? 'Upload Private Note' : 'Publish Note'}
+            </Text>
+          </TouchableOpacity>
+ 
+        </ScrollView>
+      </View>
+    </View>
   );
 }
 
 const styles = StyleSheet.create({
-  safeArea: { flex: 1 },
-  header: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    justifyContent: 'space-between',
-    paddingHorizontal: 15,
-    paddingVertical: 15,
+  modalOverlay: { 
+    flex: 1, 
+    backgroundColor: 'rgba(0,0,0,0.5)', 
+    justifyContent: 'flex-end' 
+  },
+  modalContent: { 
+    borderTopLeftRadius: 24, 
+    borderTopRightRadius: 24, 
+    height: '90%', 
+    paddingTop: 20, 
+    paddingHorizontal: 20,
+    paddingBottom: Platform.OS === 'ios' ? 40 : 20
+  },
+  modalHeader: { 
+    flexDirection: 'row', 
+    justifyContent: 'space-between', 
+    alignItems: 'center', 
+    marginBottom: 20,
+    paddingBottom: 15,
     borderBottomWidth: 1,
   },
-  backButton: { padding: 5 },
-  backIcon: { fontSize: 24, fontWeight: 'bold' },
-  headerTitle: { fontSize: 18, fontWeight: '700' },
-  container: { padding: 20 },
+  modalTitle: { 
+    fontSize: 20, 
+    fontWeight: 'bold' 
+  },
+  container: { paddingBottom: 40 },
   inputGroup: { marginBottom: 20 },
   label: { fontSize: 14, fontWeight: '600', marginBottom: 8 },
   input: {
