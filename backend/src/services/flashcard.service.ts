@@ -6,7 +6,7 @@ export interface GeneratedFlashcard {
   back: string;
 }
 
-export const generateFlashcardsFromNote = async (fileUrl: string, mimeType: string): Promise<GeneratedFlashcard[]> => {
+export const generateFlashcardsFromNote = async (fileUrl: string, mimeType: string, language: string = 'en'): Promise<GeneratedFlashcard[]> => {
   const apiKey = process.env.GEMINI_API_KEY;
   if (!apiKey) {
     throw new Error('GEMINI_API_KEY is not defined in environment variables.');
@@ -22,14 +22,13 @@ export const generateFlashcardsFromNote = async (fileUrl: string, mimeType: stri
   const arrayBuffer = await fileResponse.arrayBuffer();
   const base64Data = Buffer.from(arrayBuffer).toString('base64');
 
+  const isTr = language.toLowerCase() === 'tr';
   const prompt = `You are an expert academic assistant.
-FIRST, detect the language of the provided study note (e.g., Turkish, English, etc.).
-THEN, generate a set of flashcards based on the note.
+Please generate a set of flashcards based on the provided study note.
 
 CRITICAL LANGUAGE INSTRUCTION:
-The flashcards MUST be written in the DETECTED LANGUAGE of the study note. 
-Do NOT translate the content to English if the original text is in another language.
-(ÖNEMLİ UYARI: Eğer yüklenen not Türkçe ise, oluşturacağın bilgi kartlarındaki soru ("front") ve cevaplar ("back") KESİNLİKLE tamamen Türkçe olmalıdır. Metni hiçbir şekilde İngilizceye çevirme!)
+The flashcards MUST be written in ${isTr ? 'TURKISH (Türkçe)' : 'ENGLISH'}.
+(ÖNEMLİ UYARI: Oluşturacağın bilgi kartlarındaki soru ("front") ve cevaplar ("back") KESİNLİKLE tamamen ${isTr ? 'Türkçe' : 'İngilizce'} olmalıdır. Metni başka bir dile çevirme!)
 
 Each flashcard should have a 'front' (the question, term, or concept) and a 'back' (the answer, definition, or explanation).
 Generate between 5 to 15 flashcards depending on the note's length and complexity. Keep the text concise and easy to read.

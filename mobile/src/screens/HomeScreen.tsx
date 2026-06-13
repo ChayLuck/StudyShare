@@ -215,7 +215,7 @@ export default function HomeScreen({ navigation }: any) {
           onPress={() => navigation.navigate("AiSummary", { note: item })}
           style={{ padding: 5, marginRight: isLoggedIn ? 8 : 0 }}
         >
-          <Ionicons name="sparkles" size={20} color="#EAB308" />
+          <Ionicons name="sparkles" size={20} color="#4F46E5" />
         </TouchableOpacity>
 
         {isLoggedIn && (

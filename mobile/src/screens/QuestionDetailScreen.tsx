@@ -268,8 +268,9 @@ export default function QuestionDetailScreen({ route, navigation }: any) {
               resizeMode="cover"
             />
             {item.fileType === 'pdf' && (
-              <View style={styles.pdfBadgeOverlay}>
-                <Text style={styles.pdfBadgeText}>📄 PDF</Text>
+              <View style={[styles.pdfBadgeOverlay, { flexDirection: 'row', alignItems: 'center' }]}>
+                <Ionicons name="document-text" size={12} color="#fff" style={{ marginRight: 4 }} />
+                <Text style={styles.pdfBadgeText}>PDF</Text>
               </View>
             )}
           </TouchableOpacity>

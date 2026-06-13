@@ -244,7 +244,7 @@ export default function QuestionsScreen({ route, navigation }: any) {
   const getTitle = () => {
     if (userIdFilter) return 'My Questions';
     if (answeredByMe) return 'My Answers';
-    return 'Study Q&A';
+    return 'Questions';
   };
 
   return (

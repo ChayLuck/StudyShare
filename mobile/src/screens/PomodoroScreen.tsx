@@ -104,10 +104,11 @@ export default function PomodoroScreen() {
       style={[styles.container, { backgroundColor: colors.background }]}
       edges={['top', 'left', 'right']}
     >
-      <View style={[styles.header, { borderBottomColor: colors.border }]}>
+      <View style={styles.header}>
         <Text style={[styles.headerTitle, { color: colors.text }]}>
           Pomodoro Timer
         </Text>
+        <View style={{ width: 40 }} />
       </View>
 
       <View style={styles.content}>
@@ -235,13 +236,15 @@ export default function PomodoroScreen() {
 const styles = StyleSheet.create({
   container: { flex: 1 },
   header: {
-    padding: 20,
-    borderBottomWidth: 1,
-    alignItems: "center",
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+    paddingHorizontal: 20,
+    paddingVertical: 20,
   },
   headerTitle: {
-    fontSize: 20,
-    fontWeight: "bold",
+    fontSize: 24,
+    fontWeight: "800",
   },
   content: {
     flex: 1,
