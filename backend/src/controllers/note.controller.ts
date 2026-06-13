@@ -358,3 +358,45 @@ export const summarizeNote = async (req: AuthRequest, res: Response): Promise<vo
     res.status(500).json({ error: 'Failed to generate summary', details: error.message });
   }
 };
+
+export const deleteComment = async (req: AuthRequest, res: Response): Promise<void> => {
+  try {
+    const { commentId } = req.params;
+    const userId = req.user?.userId;
+
+    if (!userId) {
+      res.status(401).json({ error: 'Unauthorized' });
+      return;
+    }
+
+    if (!commentId || typeof commentId !== 'string') {
+      res.status(400).json({ error: 'Invalid comment ID' });
+      return;
+    }
+
+    const comment = await prisma.comment.findUnique({
+      where: { id: commentId },
+      include: { note: true }
+    });
+
+    if (!comment) {
+      res.status(404).json({ error: 'Comment not found' });
+      return;
+    }
+
+    // Can be deleted by comment author OR note owner
+    if (comment.userId !== userId && comment.note.userId !== userId) {
+      res.status(403).json({ error: 'Unauthorized' });
+      return;
+    }
+
+    await prisma.comment.delete({
+      where: { id: commentId }
+    });
+
+    res.json({ message: 'Comment deleted successfully' });
+  } catch (error: any) {
+    console.error('Delete Comment Error:', error);
+    res.status(500).json({ error: 'Internal server error' });
+  }
+};

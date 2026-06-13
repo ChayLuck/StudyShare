@@ -150,7 +150,14 @@ function AppContent() {
         ) : (
           <>
             <Stack.Screen name="Tabs" component={TabNavigator} />
-            <Stack.Screen name="Upload" component={UploadScreen} />
+            <Stack.Screen 
+              name="Upload" 
+              component={UploadScreen} 
+              options={{ 
+                presentation: 'transparentModal',
+                animation: 'slide_from_bottom'
+              }} 
+            />
             <Stack.Screen name="Admin" component={AdminScreen} />
             <Stack.Screen name="EditProfile" component={EditProfileScreen} />
             <Stack.Screen name="Leaderboard" component={LeaderboardScreen} />

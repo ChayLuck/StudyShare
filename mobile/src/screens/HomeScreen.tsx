@@ -540,10 +540,10 @@ export default function HomeScreen({ navigation }: any) {
         {/* Floating Action Button */}
         {isLoggedIn && (
           <TouchableOpacity
-            style={styles.fab}
+            style={[styles.fab, { backgroundColor: colors.primary }]}
             onPress={() => navigation.navigate("Upload")}
           >
-            <Text style={styles.fabIcon}>+</Text>
+            <Text style={styles.fabText}>+</Text>
           </TouchableOpacity>
         )}
       </View>
@@ -700,17 +700,16 @@ const styles = StyleSheet.create({
     bottom: 30,
     width: 60,
     height: 60,
-    backgroundColor: "#4F46E5",
     borderRadius: 30,
     justifyContent: "center",
     alignItems: "center",
-    shadowColor: "#4F46E5",
+    shadowColor: "#000",
     shadowOffset: { width: 0, height: 4 },
-    shadowOpacity: 0.4,
+    shadowOpacity: 0.25,
     shadowRadius: 8,
     elevation: 8,
   },
-  fabIcon: {
+  fabText: {
     color: "#fff",
     fontSize: 32,
     fontWeight: "300",

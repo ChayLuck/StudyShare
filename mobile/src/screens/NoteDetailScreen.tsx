@@ -21,7 +21,7 @@ import { useAuth } from '../context/AuthContext';
 export default function NoteDetailScreen({ route, navigation }: any) {
   const { note } = route.params;
   const { colors } = useTheme();
-  const { isLoggedIn: isLogged } = useAuth();
+  const { isLoggedIn: isLogged, userId } = useAuth();
   const insets = useSafeAreaInsets();
 
   const [comments, setComments] = useState<any[]>([]);
@@ -63,21 +63,51 @@ export default function NoteDetailScreen({ route, navigation }: any) {
     }
   };
 
-  const renderComment = ({ item }: { item: any }) => (
-    <View style={[styles.commentCard, { backgroundColor: colors.card, borderBottomColor: colors.border }]}>
-      {item.user?.avatarUrl ? (
-        <Image source={{ uri: item.user.avatarUrl }} style={styles.avatar} />
-      ) : (
-        <View style={[styles.avatarPlaceholder, { backgroundColor: colors.chip }]}>
-          <Ionicons name="person" size={16} color={colors.textSecondary} />
+  const handleDeleteComment = (commentId: string) => {
+    Alert.alert(
+      'Delete Comment',
+      'Are you sure you want to delete this comment?',
+      [
+        { text: 'Cancel', style: 'cancel' },
+        {
+          text: 'Delete',
+          style: 'destructive',
+          onPress: async () => {
+            try {
+              await api.delete(`/notes/comments/${commentId}`);
+              setComments(comments.filter(c => c.id !== commentId));
+            } catch (e: any) {
+              Alert.alert('Error', e.response?.data?.error || 'Failed to delete comment.');
+            }
+          }
+        }
+      ]
+    );
+  };
+
+  const renderComment = ({ item }: { item: any }) => {
+    const canDelete = isLogged && (item.userId === userId || note.userId === userId);
+    return (
+      <View style={[styles.commentCard, { backgroundColor: colors.card, borderBottomColor: colors.border }]}>
+        {item.user?.avatarUrl ? (
+          <Image source={{ uri: item.user.avatarUrl }} style={styles.avatar} />
+        ) : (
+          <View style={[styles.avatarPlaceholder, { backgroundColor: colors.chip }]}>
+            <Ionicons name="person" size={16} color={colors.textSecondary} />
+          </View>
+        )}
+        <View style={styles.commentContent}>
+          <Text style={[styles.commentName, { color: colors.text }]}>{item.user?.name || 'Anonymous Student'}</Text>
+          <Text style={[styles.commentText, { color: colors.textSecondary }]}>{item.text}</Text>
         </View>
-      )}
-      <View style={styles.commentContent}>
-        <Text style={[styles.commentName, { color: colors.text }]}>{item.user?.name || 'Anonymous Student'}</Text>
-        <Text style={[styles.commentText, { color: colors.textSecondary }]}>{item.text}</Text>
+        {canDelete && (
+          <TouchableOpacity onPress={() => handleDeleteComment(item.id)} style={{ paddingHorizontal: 10, justifyContent: 'center' }}>
+            <Ionicons name="trash-outline" size={18} color="#ef4444" />
+          </TouchableOpacity>
+        )}
       </View>
-    </View>
-  );
+    );
+  };
 
   return (
     <SafeAreaView style={[styles.container, { backgroundColor: colors.background }]} edges={['top', 'left', 'right']}>
