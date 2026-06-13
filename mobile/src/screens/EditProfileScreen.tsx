@@ -127,11 +127,11 @@ export default function EditProfileScreen({ navigation }: any) {
                 <Image source={{ uri: previewUri }} style={styles.avatar} />
               ) : (
                 <View style={[styles.avatarPlaceholder, { backgroundColor: colors.chip }]}>
-                  <Text style={styles.placeholderIcon}>👤</Text>
+                  <Ionicons name="person" size={50} color={colors.textSecondary} />
                 </View>
               )}
               <View style={[styles.editBadge, { backgroundColor: colors.primary }]}>
-                <Text style={styles.editBadgeText}>📷</Text>
+                <Ionicons name="camera" size={14} color="#fff" />
               </View>
             </TouchableOpacity>
             <Text style={[styles.avatarHint, { color: colors.textSecondary }]}>Tap to change photo</Text>

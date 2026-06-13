@@ -66,7 +66,7 @@ export default function LeaderboardScreen({ navigation }: any) {
           <Image source={{ uri: item.avatarUrl }} style={styles.avatar} />
         ) : (
           <View style={[styles.avatarPlaceholder, { backgroundColor: colors.chip }]}>
-            <Text style={{ fontSize: 20 }}>👤</Text>
+            <Ionicons name="person" size={20} color={colors.textSecondary} />
           </View>
         )}
 
@@ -128,7 +128,7 @@ export default function LeaderboardScreen({ navigation }: any) {
 
       <View style={{ flex: 1, backgroundColor: colors.background }}>
         <View style={[styles.banner, { backgroundColor: colors.primary }]}>
-          <Text style={styles.bannerEmoji}>{type === 'points' ? '🏆' : '⏱️'}</Text>
+          <Ionicons name={type === 'points' ? "trophy" : "stopwatch"} size={44} color="#fff" style={{ marginBottom: 8 }} />
           <Text style={styles.bannerTitle}>{type === 'points' ? 'Top Students' : 'Focus Masters'}</Text>
           <Text style={styles.bannerSub}>
             {type === 'points' 

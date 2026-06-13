@@ -7,6 +7,7 @@ export const generateFlashcards = async (req: AuthRequest, res: Response): Promi
   try {
     const noteId = req.params.noteId as string;
     const userId = req.user?.userId;
+    const language = (req.body.language || req.query.language || 'en') as string;
 
     if (!userId) {
       res.status(401).json({ error: 'Unauthorized' });
@@ -14,8 +15,7 @@ export const generateFlashcards = async (req: AuthRequest, res: Response): Promi
     }
 
     const note = await prisma.note.findUnique({
-      where: { id: noteId },
-      include: { flashcards: true }
+      where: { id: noteId }
     });
 
     if (!note) {
@@ -28,14 +28,20 @@ export const generateFlashcards = async (req: AuthRequest, res: Response): Promi
       return;
     }
 
-    // If flashcards already exist for this note, return them
-    if (note.flashcards && note.flashcards.length > 0) {
-      res.json({ message: 'Flashcards already exist', data: note.flashcards });
+    // Check if flashcards for this language already exist
+    const existingCards = await prisma.flashcard.findMany({
+      where: { noteId, language }
+    });
+
+    if (existingCards && existingCards.length > 0) {
+      console.log(`[Flashcard Controller] Returning cached flashcards (${language}) for note: ${noteId}`);
+      res.json({ message: 'Flashcards already exist', data: existingCards });
       return;
     }
 
     // Generate new flashcards
-    const generatedCards = await generateFlashcardsFromNote(note.fileUrl, note.mimeType);
+    console.log(`[Flashcard Controller] Generating new flashcards (${language}) for note: ${noteId}`);
+    const generatedCards = await generateFlashcardsFromNote(note.fileUrl, note.mimeType, language);
 
     if (!generatedCards || generatedCards.length === 0) {
       res.status(500).json({ error: 'Failed to generate flashcards.' });
@@ -48,7 +54,8 @@ export const generateFlashcards = async (req: AuthRequest, res: Response): Promi
         data: {
           front: card.front,
           back: card.back,
-          noteId: noteId
+          noteId: noteId,
+          language: language
         }
       }))
     );
@@ -64,6 +71,7 @@ export const getFlashcards = async (req: AuthRequest, res: Response): Promise<vo
   try {
     const noteId = req.params.noteId as string;
     const userId = req.user?.userId;
+    const language = (req.query.language || 'en') as string;
 
     if (!userId) {
       res.status(401).json({ error: 'Unauthorized' });
@@ -85,7 +93,7 @@ export const getFlashcards = async (req: AuthRequest, res: Response): Promise<vo
     }
 
     const flashcards = await prisma.flashcard.findMany({
-      where: { noteId },
+      where: { noteId, language },
       include: {
         progress: {
           where: { userId }

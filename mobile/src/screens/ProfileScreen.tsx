@@ -98,7 +98,7 @@ export default function ProfileScreen({ navigation }: any) {
     return (
       <SafeAreaView style={[styles.safeArea, { backgroundColor: colors.background }]} edges={['top', 'left', 'right']}>
         <View style={styles.unauthContainer}>
-          <Text style={{ fontSize: 60, marginBottom: 20 }}>🔒</Text>
+          <Ionicons name="lock-closed" size={60} color={colors.textSecondary} style={{ marginBottom: 20 }} />
           <Text style={[styles.unauthTitle, { color: colors.text }]}>Login Required</Text>
           <Text style={[styles.unauthText, { color: colors.textSecondary }]}>
             Please log in or register to view and manage your profile.
@@ -118,7 +118,7 @@ export default function ProfileScreen({ navigation }: any) {
     <SafeAreaView style={[styles.safeArea, { backgroundColor: colors.background }]} edges={['top', 'left', 'right']}>
       {/* Header */}
       <View style={styles.header}>
-        <Text style={[styles.headerTitle, { color: colors.text }]}>StudyShare</Text>
+        <Text style={[styles.headerTitle, { color: colors.text }]}>Profile</Text>
         <View style={styles.headerLinks}>
           <TouchableOpacity onPress={() => setShowNotificationsModal(true)} style={[styles.iconButton, { position: 'relative', padding: 4 }]}>
             <Ionicons name="notifications-outline" size={22} color={colors.text} />

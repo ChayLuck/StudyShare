@@ -30,6 +30,17 @@ export default function FavoritesScreen({ navigation }: any) {
     }
   };
 
+  const toggleFavorite = async (noteId: string) => {
+    try {
+      const res = await api.post("/favorites/toggle", { noteId });
+      if (!res.data.favorited) {
+        setNotes((prev) => prev.filter((note) => note.id !== noteId));
+      }
+    } catch (e) {
+      console.log('Error toggling favorite', e);
+    }
+  };
+
   const viewFile = async (fileUrl: string) => {
     try {
       await WebBrowser.openBrowserAsync(fileUrl);
@@ -62,7 +73,7 @@ export default function FavoritesScreen({ navigation }: any) {
           onPress={() => navigation.navigate("AiSummary", { note: item })}
           style={{ padding: 5 }}
         >
-          <Ionicons name="sparkles" size={20} color="#EAB308" />
+          <Ionicons name="sparkles" size={20} color="#4F46E5" />
         </TouchableOpacity>
       </View>
       {/* Kullanıcı bilgisi ve tarih */}
@@ -105,10 +116,29 @@ export default function FavoritesScreen({ navigation }: any) {
 
       <View style={[styles.divider, { backgroundColor: colors.divider }]} />
 
-      <View style={[styles.cardFooter, { justifyContent: 'space-between' }]}>
-        <TouchableOpacity onPress={() => navigation.navigate('NoteDetail', { note: item })} style={{ marginRight: 5 }}>
-          <Ionicons name="chatbubble-outline" size={20} color={colors.textSecondary} />
+      <View style={styles.cardFooter}>
+        <TouchableOpacity
+          onPress={() => toggleFavorite(item.id)}
+          style={{ marginRight: 15 }}
+        >
+          <Ionicons
+            name="heart"
+            size={22}
+            color="#ef4444"
+          />
         </TouchableOpacity>
+        <View style={{ flexDirection: "row", alignItems: "center" }}>
+          <TouchableOpacity
+            onPress={() => navigation.navigate("NoteDetail", { note: item })}
+            style={{ marginRight: 10 }}
+          >
+            <Ionicons
+              name="chatbubble-outline"
+              size={20}
+              color={colors.textSecondary}
+            />
+          </TouchableOpacity>
+        </View>
       </View>
     </TouchableOpacity>
   );
@@ -166,7 +196,7 @@ const styles = StyleSheet.create({
   descriptionText: { fontSize: 14, lineHeight: 20, marginBottom: 12 },
   thumbnail: { width: '100%', height: 180, borderRadius: 8, backgroundColor: '#f3f4f6', marginBottom: 12 },
   divider: { height: 1, marginBottom: 12 },
-  cardFooter: { flexDirection: 'row', justifyContent: 'center', alignItems: 'center' },
+  cardFooter: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center' },
   viewButton: { paddingHorizontal: 20, paddingVertical: 10, borderRadius: 8 },
   viewButtonText: { color: '#fff', fontSize: 14, fontWeight: 'bold' },
   userRow: {

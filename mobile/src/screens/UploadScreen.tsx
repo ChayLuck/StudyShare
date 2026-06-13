@@ -194,7 +194,7 @@ export default function UploadScreen({ navigation, route }: any) {
             onPress={pickFile}
           >
             <View style={[styles.fileIconPlaceholder, { backgroundColor: colors.background }]}>
-              <Text style={styles.fileIconText}>{file ? '📄' : '📁'}</Text>
+              <Ionicons name={file ? "document-text" : "folder-open"} size={24} color={colors.primary} />
             </View>
             <Text style={[styles.fileBoxText, { color: colors.primary }]}>
               {file ? file.name : 'Tap to select PDF or Image'}

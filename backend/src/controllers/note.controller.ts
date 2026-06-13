@@ -309,6 +309,8 @@ export const summarizeNote = async (req: AuthRequest, res: Response): Promise<vo
   try {
     const id = req.params.id as string;
     const userId = req.user?.userId;
+    const language = (req.body.language || req.query.language || 'en') as string;
+    const isTurkish = language.toLowerCase() === 'tr';
 
     if (!userId) {
       res.status(401).json({ error: 'Unauthorized' });
@@ -330,20 +332,24 @@ export const summarizeNote = async (req: AuthRequest, res: Response): Promise<vo
     }
 
     // Check if summary is already cached
-    if (note.aiSummary) {
-      console.log(`[Note Controller] Returning cached AI summary for note: ${id}`);
+    if (isTurkish && note.aiSummaryTr) {
+      console.log(`[Note Controller] Returning cached Turkish AI summary for note: ${id}`);
+      res.json({ summary: note.aiSummaryTr });
+      return;
+    } else if (!isTurkish && note.aiSummary) {
+      console.log(`[Note Controller] Returning cached English AI summary for note: ${id}`);
       res.json({ summary: note.aiSummary });
       return;
     }
 
     // Otherwise, generate the summary using Gemini Service
-    console.log(`[Note Controller] Generating new AI summary for note: ${id}`);
-    const summary = await generateSummary(note.fileUrl, note.mimeType);
+    console.log(`[Note Controller] Generating new AI summary (${language}) for note: ${id}`);
+    const summary = await generateSummary(note.fileUrl, note.mimeType, language);
 
     // Cache the summary in the database
     await prisma.note.update({
       where: { id },
-      data: { aiSummary: summary }
+      data: isTurkish ? { aiSummaryTr: summary } : { aiSummary: summary }
     });
 
     res.json({ summary });

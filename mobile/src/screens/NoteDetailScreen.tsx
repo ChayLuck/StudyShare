@@ -69,7 +69,7 @@ export default function NoteDetailScreen({ route, navigation }: any) {
         <Image source={{ uri: item.user.avatarUrl }} style={styles.avatar} />
       ) : (
         <View style={[styles.avatarPlaceholder, { backgroundColor: colors.chip }]}>
-          <Text style={{ fontSize: 16 }}>👤</Text>
+          <Ionicons name="person" size={16} color={colors.textSecondary} />
         </View>
       )}
       <View style={styles.commentContent}>

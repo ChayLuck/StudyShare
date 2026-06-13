@@ -76,6 +76,7 @@ model Note {
   createdAt   DateTime       @default(now())
   updatedAt   DateTime       @updatedAt
   aiSummary   String?
+  aiSummaryTr String?
   comments    Comment[]
   flashcards  Flashcard[]
   user        User?          @relation(fields: [userId], references: [id])
@@ -121,7 +122,8 @@ model Flashcard {
   front     String
   back      String
   noteId    String
-  createdAt DateTime            @default(now())
+  language  String   @default("en")
+  createdAt DateTime @default(now())
   updatedAt DateTime            @updatedAt
   note      Note                @relation(fields: [noteId], references: [id], onDelete: Cascade)
   progress  FlashcardProgress[]

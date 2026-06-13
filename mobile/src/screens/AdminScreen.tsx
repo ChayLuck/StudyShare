@@ -197,7 +197,11 @@ export default function AdminScreen({ navigation }: any) {
         ListEmptyComponent={
           <View style={styles.emptyContainer}>
             <Text style={styles.emptyText}>No data found.</Text>
-            {activeTab === 'reports' && <Text style={styles.emptySubText}>All clear! 🎉</Text>}
+            {activeTab === 'reports' && (
+              <Text style={styles.emptySubText}>
+                All clear! <Ionicons name="checkmark-circle-outline" size={16} color="#10b981" />
+              </Text>
+            )}
           </View>
         }
       />
