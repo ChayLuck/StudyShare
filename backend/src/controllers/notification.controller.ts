@@ -31,6 +31,17 @@ export const getNotifications = async (req: AuthRequest, res: Response): Promise
             createdAt: true,
             updatedAt: true
           }
+        },
+        question: {
+          select: {
+            id: true,
+            content: true,
+            course: true,
+            topic: true,
+            userId: true,
+            createdAt: true,
+            isResolved: true
+          }
         }
       },
       orderBy: { createdAt: 'desc' }

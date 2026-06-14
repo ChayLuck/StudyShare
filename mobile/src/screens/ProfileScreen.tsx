@@ -287,7 +287,11 @@ export default function ProfileScreen({ navigation }: any) {
                   onPress={async () => {
                     await markAsRead(item.id);
                     setShowNotificationsModal(false);
-                    navigation.navigate('NoteDetail', { note: item.note });
+                    if (item.type === 'ANSWER') {
+                      navigation.navigate('QuestionDetail', { questionId: item.questionId });
+                    } else {
+                      navigation.navigate('NoteDetail', { note: item.note });
+                    }
                   }}
                 >
                   {/* Sender Avatar */}
@@ -311,8 +315,10 @@ export default function ProfileScreen({ navigation }: any) {
                   <View style={{ flex: 1 }}>
                     <Text style={{ color: colors.text, fontSize: 14, lineHeight: 18 }}>
                       <Text style={{ fontWeight: 'bold' }}>{item.sender?.name || 'Someone'}</Text>
-                      {' commented on your note '}
-                      <Text style={{ fontWeight: '600', color: colors.primary }}>{item.note?.courseName}</Text>
+                      {item.type === 'ANSWER' ? ' answered your question ' : ' commented on your note '}
+                      <Text style={{ fontWeight: '600', color: colors.primary }}>
+                        {item.type === 'ANSWER' ? item.question?.course : item.note?.courseName}
+                      </Text>
                     </Text>
                     <Text style={{ color: colors.textSecondary, fontSize: 11, marginTop: 4 }}>
                       {new Date(item.createdAt).toLocaleDateString('tr-TR')} {new Date(item.createdAt).toLocaleTimeString('tr-TR', { hour: '2-digit', minute: '2-digit' })}

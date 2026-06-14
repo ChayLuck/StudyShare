@@ -42,6 +42,27 @@ export const createAnswer = async (req: any, res: Response): Promise<void> => {
       data: { points: { increment: 5 } }
     });
 
+    // Create notification for question owner
+    try {
+      const question = await prisma.question.findUnique({
+        where: { id: questionId },
+        select: { userId: true }
+      });
+
+      if (question && question.userId && question.userId !== userId) {
+        await prisma.notification.create({
+          data: {
+            userId: question.userId,
+            senderId: userId,
+            type: 'ANSWER',
+            questionId: questionId
+          }
+        });
+      }
+    } catch (notifError) {
+      console.error('Failed to create question notification:', notifError);
+    }
+
     res.status(201).json({ answer });
   } catch (error: any) {
     console.error('Create Answer Error:', error);

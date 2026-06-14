@@ -31,18 +31,19 @@ model User {
 }
 
 model Question {
-  id         String   @id @default(uuid())
-  content    String
-  fileUrl    String?
-  fileType   String?
-  course     String
-  topic      String
-  userId     String?
-  createdAt  DateTime @default(now())
-  updatedAt  DateTime @updatedAt
-  isResolved Boolean  @default(false)
-  answers    Answer[]
-  user       User?    @relation(fields: [userId], references: [id])
+  id            String         @id @default(uuid())
+  content       String
+  fileUrl       String?
+  fileType      String?
+  course        String
+  topic         String
+  userId        String?
+  createdAt     DateTime       @default(now())
+  updatedAt     DateTime       @updatedAt
+  isResolved    Boolean        @default(false)
+  answers       Answer[]
+  user          User?          @relation(fields: [userId], references: [id])
+  notifications Notification[]
 }
 
 model Answer {
@@ -147,15 +148,17 @@ enum Role {
 }
 
 model Notification {
-  id        String   @id @default(uuid())
-  userId    String   // Recipient (owner of the note)
-  senderId  String   // Actor (the commenter)
-  type      String   // "COMMENT"
-  noteId    String
-  isRead    Boolean  @default(false)
-  createdAt DateTime @default(now())
+  id         String    @id @default(uuid())
+  userId     String    // Recipient (owner of the note or question)
+  senderId   String    // Actor (the commenter or answerer)
+  type       String    // "COMMENT" or "ANSWER"
+  noteId     String?
+  questionId String?
+  isRead     Boolean   @default(false)
+  createdAt  DateTime  @default(now())
 
-  user   User @relation("UserNotifications", fields: [userId], references: [id], onDelete: Cascade)
-  sender User @relation("SenderNotifications", fields: [senderId], references: [id], onDelete: Cascade)
-  note   Note @relation(fields: [noteId], references: [id], onDelete: Cascade)
+  user     User      @relation("UserNotifications", fields: [userId], references: [id], onDelete: Cascade)
+  sender   User      @relation("SenderNotifications", fields: [senderId], references: [id], onDelete: Cascade)
+  note     Note?     @relation(fields: [noteId], references: [id], onDelete: Cascade)
+  question Question? @relation(fields: [questionId], references: [id], onDelete: Cascade)
 }
